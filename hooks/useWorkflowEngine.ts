@@ -51,6 +51,15 @@ export function useWorkflowEngine() {
           result = await generateText(payload, modelToUse, { systemInstruction });
           updateNodeStatus(targetNode.id, { status: 'completed', value: result });
         } 
+        else if (
+            targetNode.type === NodeType.CLAUDE_AGENT ||
+            targetNode.type === NodeType.DEEPSEEK_AGENT ||
+            targetNode.type === NodeType.OPENAI_AGENT ||
+            targetNode.type === NodeType.MISTRAL_AGENT
+        ) {
+          updateNodeStatus(targetNode.id, { status: 'completed', value: String(payload ?? '') });
+          result = payload;
+        }
         // --- IMAGE NODES ---
         else if (
             targetNode.type === NodeType.IMAGE_GENERATOR || 
@@ -63,13 +72,13 @@ export function useWorkflowEngine() {
           }
 
           // Validação e Defaults
-          const validRatios = ["1:1", "16:9", "4:3", "9:16", "3:4"];
+          const validRatios = ["Auto", "1:1", "16:9", "4:3", "9:16", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9"];
           let aspectRatio = targetNode.data.aspectRatio;
           if (!validRatios.includes(aspectRatio)) aspectRatio = "1:1";
 
           let resolution = targetNode.data.resolution;
           if (targetNode.type === NodeType.NANO_BANANA_PRO) {
-             if (resolution !== "1K" && resolution !== "2K") resolution = "1K";
+             if (resolution !== "1K" && resolution !== "2K" && resolution !== "4K") resolution = "1K";
           } else {
              resolution = "1K"; 
           }
@@ -82,11 +91,18 @@ export function useWorkflowEngine() {
           }
 
           result = await generateImage(payload, modelId, { aspectRatio, resolution });
-          updateNodeStatus(targetNode.id, { status: 'completed', value: result });
+          updateNodeStatus(targetNode.id, { status: 'completed', value: result, imageUrl: result });
         } 
         // --- DISPLAY NODES ---
         else if (targetNode.type === NodeType.IMAGE_DISPLAY) {
            updateNodeStatus(targetNode.id, { imageUrl: payload, status: 'completed' });
+        }
+        else if (targetNode.type === NodeType.VIDEO_DISPLAY) {
+           updateNodeStatus(targetNode.id, { videoUrl: payload, status: 'completed' });
+        }
+        // --- MESSAGE OUTPUT ---
+        else if (targetNode.type === NodeType.MESSAGE_OUTPUT) {
+           updateNodeStatus(targetNode.id, { value: String(payload ?? ''), status: 'completed' });
         }
 
         // Recursão
@@ -112,13 +128,14 @@ export function useWorkflowEngine() {
 
     try {
       const nodes = getNodes();
-      const inputNodes = nodes.filter(n => n.type === NodeType.PROMPT_INPUT);
-      
-      if (inputNodes.length === 0) {
+      const promptInputs = nodes.filter(n => n.type === NodeType.PROMPT_INPUT);
+      const videoInputs = nodes.filter(n => n.type === NodeType.VIDEO_UPLOAD);
+
+      if (promptInputs.length === 0 && videoInputs.length === 0) {
           throw new Error("NO_INPUT_NODE");
       }
 
-      for (const inputNode of inputNodes) {
+      for (const inputNode of promptInputs) {
         const promptText = inputNode.data.value;
 
         if (!promptText || typeof promptText !== 'string' || promptText.trim() === '') {
@@ -128,6 +145,17 @@ export function useWorkflowEngine() {
 
         updateNodeStatus(inputNode.id, { status: 'completed' });
         await processNodeChildren(inputNode.id, promptText);
+      }
+
+      for (const videoNode of videoInputs) {
+        const videoPayload = videoNode.data.videoUrl || videoNode.data.value;
+        if (!videoPayload || typeof videoPayload !== 'string' || videoPayload.trim() === '') {
+            updateNodeStatus(videoNode.id, { status: 'error' });
+            continue;
+        }
+
+        updateNodeStatus(videoNode.id, { status: 'completed' });
+        await processNodeChildren(videoNode.id, videoPayload);
       }
 
     } catch (error: any) {

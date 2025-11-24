@@ -42,3 +42,11 @@ export interface PipelineStepResult {
   output: any;
   success: boolean;
 }
+
+declare global {
+  interface Window {
+    aistudio?: {
+      openSelectKey: () => Promise<void>;
+    };
+  }
+}

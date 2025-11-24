@@ -41,7 +41,7 @@
       }
       
       html.dark body {
-        background-color: #050505; /* True Black background */
+        background-color: #0f172a;
       }
       
       /* Global Thin Scrollbar */
@@ -69,6 +69,18 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #f97316; 
       }
+      .custom-scrollbar { scrollbar-width: thin; }
+      .custom-scrollbar::-webkit-scrollbar { width: 2px; height: 2px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 8px; }
+      html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #f97316; }
+      .react-flow__controls .react-flow__controls-button { background-color: transparent; color: #475569; border: none; }
+      .react-flow__controls .react-flow__controls-button:hover { background-color: #e2e8f0; }
+      .react-flow__controls svg { fill: #475569; }
+      html.dark .react-flow__controls { background-color: #0f172a; border-color: #334155; }
+      html.dark .react-flow__controls .react-flow__controls-button { background-color: transparent; color: #e5e7eb; }
+      html.dark .react-flow__controls .react-flow__controls-button:hover { background-color: #334155; }
+      html.dark .react-flow__controls svg { fill: #e5e7eb; }
     </style>
   <script type="importmap">
 {
@@ -85,5 +97,6 @@
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

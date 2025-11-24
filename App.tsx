@@ -170,7 +170,7 @@ function FlowContent() {
   }, [nodes.length, setNodes]);
 
   return (
-    <div className="flex w-full h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex w-full h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
       {authError && (
         <KeySelectionModal onSelect={handleSelectKey} onClose={() => setAuthError(false)} isError={true} />
       )}
@@ -206,12 +206,12 @@ function FlowContent() {
           proOptions={{ hideAttribution: true }}
         >
           <Background 
-            color={isDarkMode ? "#52525b" : "#e2e8f0"} 
+            color={isDarkMode ? "#64748b" : "#94a3b8"} 
             variant={BackgroundVariant.Dots} 
-            gap={24} 
-            size={2} 
+            gap={isDarkMode ? 24 : 22} 
+            size={isDarkMode ? 2 : 3} 
           />
-          <Controls className="!bg-white dark:!bg-slate-800 !border-slate-200 dark:!border-slate-700 !shadow-lg !m-4 !rounded-lg !fill-slate-600 dark:!fill-slate-300" />
+          <Controls className="!bg-white dark:!bg-slate-800 !border-slate-200 dark:!border-slate-700 !shadow-lg !m-4 !rounded-lg !fill-slate-600 dark:!fill-slate-300 !text-slate-600 dark:!text-slate-300" />
         </ReactFlow>
       </div>
     </div>

@@ -1,0 +1,5 @@
+{
+  "name": "FlowGen AI",
+  "description": "Um sistema de workflow visual para geração de imagens com agentes de IA, estilo LangFlow.",
+  "requestFramePermissions": []
+}

@@ -1,7 +1,8 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import { Trash2, Copy, Info, MoreVertical } from 'lucide-react';
-import { NODE_COLORS, NODE_THEME } from '../../config';
+import { NODE_THEME } from '../../config';
+import { useTheme } from '../../context/ThemeContext';
 
 interface NodeContainerProps {
   nodeId: string;
@@ -11,10 +12,12 @@ interface NodeContainerProps {
   title: string;
   icon: any;
   color: string;
+  brandHex?: string;
   handleLeft?: boolean;
   handleRight?: boolean;
   tooltip?: string;
   iconSrc?: string;
+  containerRef?: React.Ref<HTMLDivElement>;
 }
 
 export const NodeContainer: React.FC<NodeContainerProps> = memo(({ 
@@ -24,13 +27,17 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   title, 
   icon: Icon, 
   color,
+  brandHex,
   handleLeft = true,
   handleRight = true,
   tooltip,
-  iconSrc
+  iconSrc,
+  containerRef
 }) => {
   const { setNodes, getNode } = useReactFlow();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isDarkMode } = useTheme();
+  const [imgError, setImgError] = useState(false);
 
   const headerBg = NODE_THEME[color as keyof typeof NODE_THEME]?.header || NODE_THEME['slate'].header;
   const headerText = NODE_THEME[color as keyof typeof NODE_THEME]?.headerText || NODE_THEME['slate'].headerText;
@@ -39,6 +46,16 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   const handleBorder = NODE_THEME[color as keyof typeof NODE_THEME]?.handleBorder || NODE_THEME['slate'].handleBorder;
   const handleHover = NODE_THEME[color as keyof typeof NODE_THEME]?.handleHover || NODE_THEME['slate'].handleHover;
   const ringClass = selected ? 'ring-2 ring-offset-2 ring-orange-400 dark:ring-offset-slate-900' : '';
+
+  const toRgba = (hex: string, alpha: number) => {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  const brandBgStyle = brandHex ? { backgroundColor: toRgba(brandHex, 0.35) } : undefined;
+  const brandTextStyle = brandHex && !isDarkMode ? { color: brandHex } : undefined;
 
   const onDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,7 +71,7 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
 
     const newNode = {
       ...node,
-      id: `${node.type}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${node.type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
       position: { x: node.position.x + 20, y: node.position.y + 20 },
       selected: false,
       data: { ...node.data, status: 'idle' }
@@ -69,25 +86,25 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   };
 
   return (
-    <div className={`relative w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl border-2 ${borderClass} overflow-visible group/node ${ringClass} transition-colors duration-200`}>
+    <div ref={containerRef} className={`relative w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl border-2 ${borderClass} overflow-visible group/node ${ringClass} transition-colors duration-200`} style={brandHex ? { borderColor: brandHex } : undefined}>
       {/* Header */}
-      <div className={`px-4 py-3 flex items-center justify-between ${headerBg} rounded-t-xl relative border-b border-white/30 dark:border-transparent`}>
-        <div className={`flex items-center gap-2 ${headerText}`}> 
-          {iconSrc ? (
-            <img src={iconSrc} alt="icon" className="w-5 h-5" />
+      <div className={`px-4 py-3 flex items-center justify-between ${brandHex ? '' : headerBg} rounded-t-xl relative border-b border-white/30 dark:border-transparent`} style={brandHex ? brandBgStyle : undefined}>
+        <div className={`flex items-center gap-2 ${brandHex ? '' : headerText}`}> 
+          {iconSrc && !imgError ? (
+            <img src={iconSrc} alt="icon" className="w-5 h-5" loading="lazy" onError={() => setImgError(true)} />
           ) : (
             <Icon size={16} strokeWidth={2.5} />
           )}
-          <span className="font-semibold text-sm tracking-wide">{title}</span>
+          <span className={`font-semibold text-sm tracking-wide ${brandHex ? 'dark:text-white' : ''}`} style={brandTextStyle}>{title}</span>
         </div>
 
         <div className="flex items-center gap-1">
           {tooltip && (
             <div className="group/info relative">
-              <Info size={14} className="text-white/70 hover:text-white cursor-help" />
-              <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 dark:bg-black text-white text-[10px] rounded shadow-lg invisible opacity-0 group-hover/info:visible group-hover/info:opacity-100 transition-all z-50 pointer-events-none">
+              <Info size={14} className={`${isDarkMode ? 'text-white/70 hover:text-white' : 'text-slate-600 hover:text-slate-800'} cursor-help`} />
+              <div className={`absolute bottom-full right-0 mb-2 w-56 p-2 rounded invisible opacity-0 group-hover/info:visible group-hover/info:opacity-100 transition-all z-50 pointer-events-none shadow-2xl ${isDarkMode ? 'bg-black text-white border border-slate-700' : 'bg-white text-slate-800 border border-slate-300'}`}>
                 {tooltip}
-                <div className="absolute top-full right-1 -mt-1 border-4 border-transparent border-t-slate-800 dark:border-t-black"></div>
+                <div className={`absolute top-full right-1 -mt-1 border-4 border-transparent ${isDarkMode ? 'border-t-black' : 'border-t-white'}`}></div>
               </div>
             </div>
           )}
@@ -116,10 +133,20 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
 
       {/* Handles */}
       {handleLeft && (
-          <Handle type="target" position={Position.Left} style={{ left: -32, zIndex: 5 }} className={`w-5 h-5 border-2 transition-colors ${handleBg} ${handleBorder} ${handleHover} rounded-full`} />
+          <Handle 
+            type="target" 
+            position={Position.Left} 
+            style={{ left: -32, zIndex: 5, backgroundColor: brandHex ? toRgba(brandHex, 0.35) : undefined, borderColor: brandHex || undefined }} 
+            className={`w-5 h-5 border-2 transition-colors ${brandHex ? '' : handleBg} ${brandHex ? '' : handleBorder} ${brandHex ? '' : handleHover} rounded-full`} 
+          />
       )}
       {handleRight && (
-          <Handle type="source" position={Position.Right} style={{ right: -32, zIndex: 5 }} className={`w-5 h-5 border-2 transition-colors ${handleBg} ${handleBorder} ${handleHover} rounded-full`} />
+          <Handle 
+            type="source" 
+            position={Position.Right} 
+            style={{ right: -32, zIndex: 5, backgroundColor: brandHex ? toRgba(brandHex, 0.35) : undefined, borderColor: brandHex || undefined }} 
+            className={`w-5 h-5 border-2 transition-colors ${brandHex ? '' : handleBg} ${brandHex ? '' : handleBorder} ${brandHex ? '' : handleHover} rounded-full`} 
+          />
       )}
     </div>
   );

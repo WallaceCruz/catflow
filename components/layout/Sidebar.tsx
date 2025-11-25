@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video } from 'lucide-react';
+import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 import { NodeType } from '../../types';
-import { GEMINI_LOGO } from '../../config';
+import { GEMINI_LOGO, WHATSAPP_LOGO, DISCORD_LOGO, GMAIL_LOGO, TELEGRAM_LOGO } from '../../config';
 
 interface SidebarItemProps {
   type: NodeType;
@@ -25,7 +25,7 @@ const SidebarItem = ({ type, icon: Icon, iconSrc, label, colorClass }: SidebarIt
     >
       <div className={`w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center`}> 
         {iconSrc ? (
-          <img src={iconSrc} alt="icon" className="w-4 h-4" />
+          <img src={iconSrc} alt="icon" className="w-4 h-4" loading="lazy" decoding="async" />
         ) : (
           Icon ? <Icon size={16} className="text-slate-600 dark:text-slate-300" /> : null
         )}
@@ -51,7 +51,10 @@ export const Sidebar = () => {
   const [textOpen, setTextOpen] = useState(true);
   const [imageOpen, setImageOpen] = useState(true);
   const [outputsOpen, setOutputsOpen] = useState(true);
+  const [communicationOpen, setCommunicationOpen] = useState(true);
+  const [flowOpen, setFlowOpen] = useState(true);
   const [agentsOpen, setAgentsOpen] = useState(true);
+  const [integrationsOpen, setIntegrationsOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const matches = (label: string) => label.toLowerCase().includes(searchTerm.toLowerCase());
   useEffect(() => {
@@ -61,15 +64,21 @@ export const Sidebar = () => {
       setImageOpen(true);
       setOutputsOpen(true);
       setAgentsOpen(true);
+      setIntegrationsOpen(true);
+      setCommunicationOpen(true);
+      setFlowOpen(true);
     }
   }, [searchTerm]);
-  const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video'].filter(matches).length;
+  const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video', 'Upload XML', 'Upload PDF'].filter(matches).length;
   const textCount = ['Gemini 3 Pro', 'Gemini 2.5 Flash', 'Gemini Flash Lite', 'Prompt Expert'].filter(matches).length;
   const imageCount = ['Nano Banana', 'Nano Banana Pro'].filter(matches).length;
   const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output'].filter(matches).length;
   const agentsCount = ['Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI'].filter(matches).length;
+  const integrationsCount = ['Supabase', 'Redis'].filter(matches).length;
+  const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram'].filter(matches).length;
+  const flowCount = ['Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
   return (
-    <aside className="w-80 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full flex flex-col shadow-xl z-20 relative transition-colors duration-300">
+    <aside className="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full flex flex-col shadow-xl z-20 relative transition-colors duration-300">
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-2 text-orange-600 mb-1">
@@ -99,6 +108,52 @@ export const Sidebar = () => {
         </div>
         
         <div className="mb-4">
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setFlowOpen(v => !v)}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ChevronDown size={14} className={`${flowOpen ? '' : 'rotate-180'} transition-transform`} />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider">Flow Control</h3>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{flowCount}</span>
+          </div>
+          <Collapsible open={flowOpen}>
+            {(!searchTerm || matches('Router')) && (
+              <SidebarItem type={NodeType.ROUTER} icon={GitBranch} label="Router" colorClass="bg-indigo-500" />
+            )}
+            {(!searchTerm || matches('Function')) && (
+              <SidebarItem type={NodeType.FUNCTION} icon={Code2} label="Function" colorClass="bg-purple-500" />
+            )}
+            {(!searchTerm || matches('Condition')) && (
+              <SidebarItem type={NodeType.CONDITION} icon={Filter} label="Condition" colorClass="bg-amber-500" />
+            )}
+            {(!searchTerm || matches('Wait')) && (
+              <SidebarItem type={NodeType.WAIT} icon={Timer} label="Wait" colorClass="bg-slate-500" />
+            )}
+          </Collapsible>
+        </div>
+        <div className="mb-4">
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setCommunicationOpen(v => !v)}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ChevronDown size={14} className={`${communicationOpen ? '' : 'rotate-180'} transition-transform`} />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider">Communication</h3>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{communicationCount}</span>
+          </div>
+          <Collapsible open={communicationOpen}>
+            {(!searchTerm || matches('WhatsApp')) && (
+              <SidebarItem type={NodeType.WHATSAPP} iconSrc={WHATSAPP_LOGO} label="WhatsApp" colorClass="bg-emerald-500" />
+            )}
+            {(!searchTerm || matches('Discord')) && (
+              <SidebarItem type={NodeType.DISCORD} iconSrc={DISCORD_LOGO} label="Discord" colorClass="bg-indigo-500" />
+            )}
+            {(!searchTerm || matches('Gmail')) && (
+              <SidebarItem type={NodeType.GMAIL} iconSrc={GMAIL_LOGO} label="Gmail" colorClass="bg-rose-500" />
+            )}
+            {(!searchTerm || matches('Telegram')) && (
+              <SidebarItem type={NodeType.TELEGRAM} iconSrc={TELEGRAM_LOGO} label="Telegram" colorClass="bg-cyan-500" />
+            )}
+          </Collapsible>
+        </div>
+        <div className="mb-4">
           <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setInputsOpen(v => !v)}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${inputsOpen ? '' : 'rotate-180'} transition-transform`} />
@@ -115,6 +170,12 @@ export const Sidebar = () => {
             )}
             {(!searchTerm || matches('Upload Video')) && (
               <SidebarItem type={NodeType.VIDEO_UPLOAD} icon={Video} label="Upload Video" colorClass="bg-slate-500"/>
+            )}
+            {(!searchTerm || matches('Upload XML')) && (
+              <SidebarItem type={NodeType.XML_UPLOAD} icon={FileCode} label="Upload XML" colorClass="bg-slate-500"/>
+            )}
+            {(!searchTerm || matches('Upload PDF')) && (
+              <SidebarItem type={NodeType.PDF_UPLOAD} icon={FileText} label="Upload PDF" colorClass="bg-slate-500"/>
             )}
           </Collapsible>
         </div>
@@ -181,6 +242,24 @@ export const Sidebar = () => {
             )}
             {(!searchTerm || matches('Mistral AI')) && (
               <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={'/assets/logos/mistral-ai.svg'} label="Mistral AI" colorClass="bg-slate-500" />
+            )}
+          </Collapsible>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setIntegrationsOpen(v => !v)}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ChevronDown size={14} className={`${integrationsOpen ? '' : 'rotate-180'} transition-transform`} />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider">Integrations</h3>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{integrationsCount}</span>
+          </div>
+          <Collapsible open={integrationsOpen}>
+            {(!searchTerm || matches('Supabase')) && (
+              <SidebarItem type={NodeType.SUPABASE} iconSrc={'/assets/logos/supabase.svg'} label="Supabase" colorClass="bg-green-500" />
+            )}
+            {(!searchTerm || matches('Redis')) && (
+              <SidebarItem type={NodeType.REDIS} iconSrc={'/assets/logos/redis.svg'} label="Redis" colorClass="bg-rose-500" />
             )}
           </Collapsible>
         </div>

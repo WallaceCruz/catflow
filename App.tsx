@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -11,7 +11,7 @@ import ReactFlow, {
 } from 'reactflow';
 
 import { NodeType } from './types';
-import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode } from './components/CustomNodes';
+import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -31,6 +31,8 @@ const nodeTypes = {
   [NodeType.PROMPT_INPUT]: PromptInputNode,
   [NodeType.IMAGE_UPLOAD]: ImageUploadNode,
   [NodeType.VIDEO_UPLOAD]: VideoUploadNode,
+  [NodeType.XML_UPLOAD]: XmlUploadNode,
+  [NodeType.PDF_UPLOAD]: PdfUploadNode,
   [NodeType.GEMINI_3_PRO]: TextGenNode,
   [NodeType.GEMINI_2_5_FLASH]: TextGenNode,
   [NodeType.GEMINI_FLASH_LITE]: TextGenNode,
@@ -45,9 +47,20 @@ const nodeTypes = {
   [NodeType.IMAGE_DISPLAY]: OutputNode,
   [NodeType.MESSAGE_OUTPUT]: MessageOutputNode,
   [NodeType.VIDEO_DISPLAY]: VideoOutputNode,
+  [NodeType.REDIS]: RedisNode,
+  [NodeType.SUPABASE]: SupabaseNode,
+  [NodeType.WHATSAPP]: CommunicationNode,
+  [NodeType.DISCORD]: CommunicationNode,
+  [NodeType.GMAIL]: CommunicationNode,
+  [NodeType.TELEGRAM]: CommunicationNode,
+  [NodeType.ROUTER]: RouterNode,
+  [NodeType.FUNCTION]: FunctionNode,
+  [NodeType.CONDITION]: ConditionNode,
+  [NodeType.WAIT]: WaitNode,
+  [NodeType.MERGE]: MergeNode,
 };
 
-// removed defaultEdgeOptions to compute dynamically per theme
+ 
 
 const initialNodesData: Node[] = [
   {
@@ -68,11 +81,12 @@ function FlowContent() {
   
   const { project, toObject } = useReactFlow();
   const { isDarkMode } = useTheme();
-  const edgeOptions = {
+
+  const edgeOptions = useMemo(() => ({
     type: 'default',
     animated: true,
     style: { stroke: isDarkMode ? '#60a5fa' : '#6366f1', strokeWidth: 3 },
-  };
+  }), [isDarkMode]);
 
   // Hooks
   const { 
@@ -114,8 +128,10 @@ function FlowContent() {
         y: event.clientY - (reactFlowBounds?.top || 0),
       });
 
+      const genId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
       const newNode: Node = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: genId(),
         type,
         position,
         data: { label: `${type} node`, value: '', status: 'idle', aspectRatio: '1:1', resolution: '1K' },
@@ -127,16 +143,69 @@ function FlowContent() {
          };
       }
 
+      if (type === NodeType.FUNCTION) {
+        newNode.data.fnBody = 'return input;';
+      }
+      if (type === NodeType.CONDITION) {
+        newNode.data.conditionExpr = 'input && input.length > 0';
+      }
+      if (type === NodeType.ROUTER) {
+        newNode.data.routerMode = 'all';
+        newNode.data.routerIndex = '0';
+        newNode.data.routerCount = 3;
+      }
+      if (type === NodeType.WAIT) {
+        newNode.data.waitMs = 1000;
+        newNode.data.waitUnit = 'ms';
+      }
+
       setNodes((nds) => nds.concat(newNode));
     },
     [project, setNodes]
   );
 
   // Persistence
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const stateParam = params.get('state');
+      let flow: any = null;
+      if (stateParam) {
+        const decoded = atob(decodeURIComponent(stateParam));
+        flow = JSON.parse(decoded);
+      } else {
+        const saved = localStorage.getItem('flowgen-state');
+        if (saved) flow = JSON.parse(saved);
+      }
+      if (flow && flow.nodes && flow.edges) {
+        setNodes(flow.nodes);
+        setEdges(flow.edges);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const onSave = useCallback(() => {
-    const flow = toObject();
-    localStorage.setItem('flowgen-state', JSON.stringify(flow));
-    alert('Workflow salvo com sucesso!');
+    try {
+      const flow = toObject();
+      localStorage.setItem('flowgen-state', JSON.stringify(flow));
+      alert('Workflow salvo com sucesso!');
+    } catch {}
+  }, [toObject]);
+
+  const onShare = useCallback(() => {
+    try {
+      const flow = toObject();
+      const encoded = encodeURIComponent(btoa(JSON.stringify(flow)));
+      const url = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
+      if ((navigator as any).share) {
+        (navigator as any).share({ title: 'FlowGen AI', text: 'Veja meu workflow', url });
+      } else {
+        navigator.clipboard.writeText(url);
+        alert('Link de compartilhamento copiado!');
+      }
+    } catch {
+      alert('Falha ao gerar link de compartilhamento');
+    }
   }, [toObject]);
 
   // Trigger Modal
@@ -196,7 +265,7 @@ function FlowContent() {
       <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
         <Header 
           onUndo={undo} onRedo={redo} canUndo={past.length > 0} canRedo={future.length > 0}
-          onSelectKey={handleSelectKey} onClear={requestClear} onSave={onSave} onRun={runWorkflow} isRunning={isRunning}
+          onSelectKey={handleSelectKey} onClear={requestClear} onSave={onSave} onShare={onShare} onRun={runWorkflow} isRunning={isRunning}
         />
 
         <ReactFlow

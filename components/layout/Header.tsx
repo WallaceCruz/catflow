@@ -21,13 +21,19 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <div className="absolute top-4 right-4 z-10 flex gap-2">
-      {/* Theme Toggle */}
-      <button 
-        onClick={toggleTheme} 
-        className="p-3 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-orange-400 transition-all mr-2"
+      <button
+        onClick={toggleTheme}
+        role="switch"
+        aria-checked={isDarkMode}
+        className="relative w-20 h-12 rounded-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 shadow-lg mr-2 hover:bg-white dark:hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50"
         title={isDarkMode ? "Light Mode" : "Dark Mode"}
+        aria-label={isDarkMode ? "Tema escuro" : "Tema claro"}
       >
-        {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+        <div className="absolute inset-0 flex items-center justify-between px-3">
+          <Moon size={16} className={isDarkMode ? 'text-slate-100' : 'text-slate-400'} />
+          <Sun size={16} className={isDarkMode ? 'text-slate-400' : 'text-slate-800'} />
+        </div>
+        <span className={`absolute top-2 left-2 w-8 h-8 rounded-full bg-white dark:bg-slate-200 shadow-md ring-1 ring-slate-300 dark:ring-slate-500 transition-transform duration-200 ease-out ${isDarkMode ? 'translate-x-8' : ''}`}></span>
       </button>
 
       <div className="flex gap-1 mr-4 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-lg px-2 py-1 items-center">

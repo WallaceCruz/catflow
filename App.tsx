@@ -11,7 +11,7 @@ import ReactFlow, {
 } from 'reactflow';
 
 import { NodeType } from './types';
-import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode } from './components/CustomNodes';
+import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -30,21 +30,24 @@ import { ConfirmationModal } from './components/layout/ConfirmationModal';
 const nodeTypes = {
   [NodeType.PROMPT_INPUT]: PromptInputNode,
   [NodeType.IMAGE_UPLOAD]: ImageUploadNode,
+  [NodeType.VIDEO_UPLOAD]: VideoUploadNode,
   [NodeType.GEMINI_3_PRO]: TextGenNode,
   [NodeType.GEMINI_2_5_FLASH]: TextGenNode,
   [NodeType.GEMINI_FLASH_LITE]: TextGenNode,
   [NodeType.PROMPT_ENHANCER]: TextGenNode,
+  [NodeType.CLAUDE_AGENT]: TextGenNode,
+  [NodeType.DEEPSEEK_AGENT]: TextGenNode,
+  [NodeType.OPENAI_AGENT]: TextGenNode,
+  [NodeType.MISTRAL_AGENT]: TextGenNode,
   [NodeType.IMAGE_GENERATOR]: ImageGenNode, 
   [NodeType.NANO_BANANA]: ImageGenNode,     
   [NodeType.NANO_BANANA_PRO]: ImageGenNode, 
   [NodeType.IMAGE_DISPLAY]: OutputNode,
+  [NodeType.MESSAGE_OUTPUT]: MessageOutputNode,
+  [NodeType.VIDEO_DISPLAY]: VideoOutputNode,
 };
 
-const defaultEdgeOptions = {
-  type: 'default',
-  animated: true,
-  style: { stroke: '#94a3b8', strokeWidth: 3 },
-};
+// removed defaultEdgeOptions to compute dynamically per theme
 
 const initialNodesData: Node[] = [
   {
@@ -65,6 +68,11 @@ function FlowContent() {
   
   const { project, toObject } = useReactFlow();
   const { isDarkMode } = useTheme();
+  const edgeOptions = {
+    type: 'default',
+    animated: true,
+    style: { stroke: isDarkMode ? '#60a5fa' : '#6366f1', strokeWidth: 3 },
+  };
 
   // Hooks
   const { 
@@ -201,7 +209,7 @@ function FlowContent() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           nodeTypes={nodeTypes}
-          defaultEdgeOptions={defaultEdgeOptions}
+          defaultEdgeOptions={edgeOptions}
           fitView
           proOptions={{ hideAttribution: true }}
         >

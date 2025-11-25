@@ -69,11 +69,14 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #f97316; 
       }
-      .custom-scrollbar { scrollbar-width: thin; }
-      .custom-scrollbar::-webkit-scrollbar { width: 2px; height: 2px; }
+      .custom-scrollbar { scrollbar-width: none; scrollbar-color: #cbd5e1 transparent; }
+      .custom-scrollbar:hover { scrollbar-width: thin; }
+      html.dark .custom-scrollbar { scrollbar-color: #6b7280 transparent; }
+      .custom-scrollbar::-webkit-scrollbar { width: 0px; height: 0px; }
+      .custom-scrollbar:hover::-webkit-scrollbar { width: 1px; height: 1px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 8px; }
-      html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #f97316; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+      html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #6b7280; }
       .react-flow__controls .react-flow__controls-button { background-color: transparent; color: #475569; border: none; }
       .react-flow__controls .react-flow__controls-button:hover { background-color: #e2e8f0; }
       .react-flow__controls svg { fill: #475569; }

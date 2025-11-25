@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 import { NodeType } from '../../types';
-import { GEMINI_LOGO, WHATSAPP_LOGO, DISCORD_LOGO, GMAIL_LOGO, TELEGRAM_LOGO } from '../../config';
+import { GEMINI_LOGO, WHATSAPP_LOGO, DISCORD_LOGO, GMAIL_LOGO, TELEGRAM_LOGO, CLAUDE_LOGO, DEEPSEEK_LOGO, OPENAI_LOGO, MISTRAL_LOGO, SUPABASE_LOGO, REDIS_LOGO } from '../../config';
 
 interface SidebarItemProps {
   type: NodeType;
@@ -232,16 +232,16 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={agentsOpen}>
             {(!searchTerm || matches('Claude AI')) && (
-              <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={'/assets/logos/claude-ai.svg'} label="Claude AI" colorClass="bg-slate-500" />
+              <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={CLAUDE_LOGO} label="Claude AI" colorClass="bg-slate-500" />
             )}
             {(!searchTerm || matches('Deepseek')) && (
-              <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={'/assets/logos/deepseek.svg'} label="Deepseek" colorClass="bg-slate-500" />
+              <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={DEEPSEEK_LOGO} label="Deepseek" colorClass="bg-slate-500" />
             )}
             {(!searchTerm || matches('OpenAI')) && (
-              <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={'/assets/logos/openai.svg'} label="OpenAI" colorClass="bg-slate-500" />
+              <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={OPENAI_LOGO} label="OpenAI" colorClass="bg-slate-500" />
             )}
             {(!searchTerm || matches('Mistral AI')) && (
-              <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={'/assets/logos/mistral-ai.svg'} label="Mistral AI" colorClass="bg-slate-500" />
+              <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={MISTRAL_LOGO} label="Mistral AI" colorClass="bg-slate-500" />
             )}
           </Collapsible>
         </div>
@@ -256,10 +256,10 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={integrationsOpen}>
             {(!searchTerm || matches('Supabase')) && (
-              <SidebarItem type={NodeType.SUPABASE} iconSrc={'/assets/logos/supabase.svg'} label="Supabase" colorClass="bg-green-500" />
+              <SidebarItem type={NodeType.SUPABASE} iconSrc={SUPABASE_LOGO} label="Supabase" colorClass="bg-green-500" />
             )}
             {(!searchTerm || matches('Redis')) && (
-              <SidebarItem type={NodeType.REDIS} iconSrc={'/assets/logos/redis.svg'} label="Redis" colorClass="bg-rose-500" />
+              <SidebarItem type={NodeType.REDIS} iconSrc={REDIS_LOGO} label="Redis" colorClass="bg-rose-500" />
             )}
           </Collapsible>
         </div>

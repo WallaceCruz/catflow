@@ -18,6 +18,19 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              react: ['react', 'react-dom'],
+              reactflow: ['reactflow', '@reactflow/core', '@reactflow/controls', '@reactflow/background'],
+              genai: ['@google/genai'],
+              lucide: ['lucide-react']
+            }
+          }
+        },
+        chunkSizeWarningLimit: 1000
       }
     };
-});
+  });

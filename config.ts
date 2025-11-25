@@ -1,7 +1,7 @@
 
 
 import { NodeType } from './types';
-import { Bot, Brain, ZapIcon, Feather, Sparkles, Star, Upload, Video, Type } from 'lucide-react';
+import { Bot, Brain, ZapIcon, Feather, Sparkles, Star, Upload, Video, Type, Server, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 
 export const NODE_COLORS = {
   blue: 'bg-blue-500 border-blue-500',
@@ -16,88 +16,98 @@ export const NODE_COLORS = {
   slate: 'bg-slate-600 border-slate-600'
 };
 
-export const GEMINI_LOGO = '/assets/logos/gemini.svg';
+export const GEMINI_LOGO = new URL('./assets/logos/gemini.svg', import.meta.url).href;
+export const CLAUDE_LOGO = new URL('./assets/logos/claude-ai.svg', import.meta.url).href;
+export const DEEPSEEK_LOGO = new URL('./assets/logos/deepseek.svg', import.meta.url).href;
+export const OPENAI_LOGO = new URL('./assets/logos/openai.svg', import.meta.url).href;
+export const MISTRAL_LOGO = new URL('./assets/logos/mistral-ai.svg', import.meta.url).href;
+export const REDIS_LOGO = new URL('./assets/logos/redis.svg', import.meta.url).href;
+export const SUPABASE_LOGO = new URL('./assets/logos/supabase.svg', import.meta.url).href;
+export const DISCORD_LOGO = new URL('./assets/logos/discord.svg', import.meta.url).href;
+export const WHATSAPP_LOGO = new URL('./assets/logos/whatsapp.svg', import.meta.url).href;
+export const GMAIL_LOGO = new URL('./assets/logos/gmail.svg', import.meta.url).href;
+export const TELEGRAM_LOGO = new URL('./assets/logos/telegram.svg', import.meta.url).href;
 
 export const NODE_THEME = {
   blue: {
-    header: 'bg-blue-50 dark:bg-blue-900/20',
-    headerText: 'text-blue-700 dark:text-blue-200',
-    border: 'border-blue-300 dark:border-blue-700',
-    handleBg: 'bg-blue-100 dark:bg-blue-800',
-    handleBorder: 'border-blue-300 dark:border-blue-600',
-    handleHover: 'hover:bg-blue-400 hover:border-blue-400'
+    header: 'bg-blue-100 dark:bg-blue-900/40',
+    headerText: 'text-blue-800 dark:text-blue-100',
+    border: 'border-blue-400 dark:border-blue-600',
+    handleBg: 'bg-blue-200 dark:bg-blue-700',
+    handleBorder: 'border-blue-400 dark:border-blue-600',
+    handleHover: 'hover:bg-blue-500 hover:border-blue-500'
   },
   purple: {
-    header: 'bg-purple-50 dark:bg-purple-900/20',
-    headerText: 'text-purple-700 dark:text-purple-200',
-    border: 'border-purple-300 dark:border-purple-700',
-    handleBg: 'bg-purple-100 dark:bg-purple-800',
-    handleBorder: 'border-purple-300 dark:border-purple-600',
-    handleHover: 'hover:bg-purple-400 hover:border-purple-400'
+    header: 'bg-purple-100 dark:bg-purple-900/40',
+    headerText: 'text-purple-800 dark:text-purple-100',
+    border: 'border-purple-400 dark:border-purple-600',
+    handleBg: 'bg-purple-200 dark:bg-purple-700',
+    handleBorder: 'border-purple-400 dark:border-purple-600',
+    handleHover: 'hover:bg-purple-500 hover:border-purple-500'
   },
   indigo: {
-    header: 'bg-indigo-50 dark:bg-indigo-900/20',
-    headerText: 'text-indigo-700 dark:text-indigo-200',
-    border: 'border-indigo-300 dark:border-indigo-700',
-    handleBg: 'bg-indigo-100 dark:bg-indigo-800',
-    handleBorder: 'border-indigo-300 dark:border-indigo-600',
-    handleHover: 'hover:bg-indigo-400 hover:border-indigo-400'
+    header: 'bg-indigo-100 dark:bg-indigo-900/40',
+    headerText: 'text-indigo-800 dark:text-indigo-100',
+    border: 'border-indigo-400 dark:border-indigo-600',
+    handleBg: 'bg-indigo-200 dark:bg-indigo-700',
+    handleBorder: 'border-indigo-400 dark:border-indigo-600',
+    handleHover: 'hover:bg-indigo-500 hover:border-indigo-500'
   },
   cyan: {
-    header: 'bg-cyan-50 dark:bg-cyan-900/20',
-    headerText: 'text-cyan-700 dark:text-cyan-200',
-    border: 'border-cyan-300 dark:border-cyan-700',
-    handleBg: 'bg-cyan-100 dark:bg-cyan-800',
-    handleBorder: 'border-cyan-300 dark:border-cyan-600',
-    handleHover: 'hover:bg-cyan-400 hover:border-cyan-400'
+    header: 'bg-cyan-100 dark:bg-cyan-900/40',
+    headerText: 'text-cyan-800 dark:text-cyan-100',
+    border: 'border-cyan-400 dark:border-cyan-600',
+    handleBg: 'bg-cyan-200 dark:bg-cyan-700',
+    handleBorder: 'border-cyan-400 dark:border-cyan-600',
+    handleHover: 'hover:bg-cyan-500 hover:border-cyan-500'
   },
   teal: {
-    header: 'bg-teal-50 dark:bg-teal-900/20',
-    headerText: 'text-teal-700 dark:text-teal-200',
-    border: 'border-teal-300 dark:border-teal-700',
-    handleBg: 'bg-teal-100 dark:bg-teal-800',
-    handleBorder: 'border-teal-300 dark:border-teal-600',
-    handleHover: 'hover:bg-teal-400 hover:border-teal-400'
+    header: 'bg-teal-100 dark:bg-teal-900/40',
+    headerText: 'text-teal-800 dark:text-teal-100',
+    border: 'border-teal-400 dark:border-teal-600',
+    handleBg: 'bg-teal-200 dark:bg-teal-700',
+    handleBorder: 'border-teal-400 dark:border-teal-600',
+    handleHover: 'hover:bg-teal-500 hover:border-teal-500'
   },
   orange: {
-    header: 'bg-orange-50 dark:bg-orange-900/20',
-    headerText: 'text-orange-700 dark:text-orange-200',
-    border: 'border-orange-300 dark:border-orange-700',
-    handleBg: 'bg-orange-100 dark:bg-orange-800',
-    handleBorder: 'border-orange-300 dark:border-orange-600',
-    handleHover: 'hover:bg-orange-400 hover:border-orange-400'
+    header: 'bg-orange-100 dark:bg-orange-900/40',
+    headerText: 'text-orange-800 dark:text-orange-100',
+    border: 'border-orange-400 dark:border-orange-600',
+    handleBg: 'bg-orange-200 dark:bg-orange-700',
+    handleBorder: 'border-orange-400 dark:border-orange-600',
+    handleHover: 'hover:bg-orange-500 hover:border-orange-500'
   },
   amber: {
-    header: 'bg-amber-50 dark:bg-amber-900/20',
-    headerText: 'text-amber-700 dark:text-amber-200',
-    border: 'border-amber-300 dark:border-amber-700',
-    handleBg: 'bg-amber-100 dark:bg-amber-800',
-    handleBorder: 'border-amber-300 dark:border-amber-600',
-    handleHover: 'hover:bg-amber-400 hover:border-amber-400'
+    header: 'bg-amber-100 dark:bg-amber-900/40',
+    headerText: 'text-amber-800 dark:text-amber-100',
+    border: 'border-amber-400 dark:border-amber-600',
+    handleBg: 'bg-amber-200 dark:bg-amber-700',
+    handleBorder: 'border-amber-400 dark:border-amber-600',
+    handleHover: 'hover:bg-amber-500 hover:border-amber-500'
   },
   rose: {
-    header: 'bg-rose-50 dark:bg-rose-900/20',
-    headerText: 'text-rose-700 dark:text-rose-200',
-    border: 'border-rose-300 dark:border-rose-700',
-    handleBg: 'bg-rose-100 dark:bg-rose-800',
-    handleBorder: 'border-rose-300 dark:border-rose-600',
-    handleHover: 'hover:bg-rose-400 hover:border-rose-400'
+    header: 'bg-rose-100 dark:bg-rose-900/40',
+    headerText: 'text-rose-800 dark:text-rose-100',
+    border: 'border-rose-400 dark:border-rose-600',
+    handleBg: 'bg-rose-200 dark:bg-rose-700',
+    handleBorder: 'border-rose-400 dark:border-rose-600',
+    handleHover: 'hover:bg-rose-500 hover:border-rose-500'
   },
   green: {
-    header: 'bg-emerald-50 dark:bg-emerald-900/20',
-    headerText: 'text-emerald-700 dark:text-emerald-200',
-    border: 'border-emerald-300 dark:border-emerald-700',
-    handleBg: 'bg-emerald-100 dark:bg-emerald-800',
-    handleBorder: 'border-emerald-300 dark:border-emerald-600',
-    handleHover: 'hover:bg-emerald-400 hover:border-emerald-400'
+    header: 'bg-emerald-100 dark:bg-emerald-900/40',
+    headerText: 'text-emerald-800 dark:text-emerald-100',
+    border: 'border-emerald-400 dark:border-emerald-600',
+    handleBg: 'bg-emerald-200 dark:bg-emerald-700',
+    handleBorder: 'border-emerald-400 dark:border-emerald-600',
+    handleHover: 'hover:bg-emerald-500 hover:border-emerald-500'
   },
   slate: {
-    header: 'bg-slate-100 dark:bg-slate-800/40',
-    headerText: 'text-slate-700 dark:text-slate-200',
-    border: 'border-slate-300 dark:border-slate-700',
-    handleBg: 'bg-slate-200 dark:bg-slate-700',
-    handleBorder: 'border-slate-400 dark:border-slate-600',
-    handleHover: 'hover:bg-slate-500 hover:border-slate-500'
+    header: 'bg-slate-200 dark:bg-slate-800/60',
+    headerText: 'text-slate-800 dark:text-slate-100',
+    border: 'border-slate-400 dark:border-slate-600',
+    handleBg: 'bg-slate-300 dark:bg-slate-700',
+    handleBorder: 'border-slate-500 dark:border-slate-600',
+    handleHover: 'hover:bg-slate-600 hover:border-slate-600'
   }
 };
 
@@ -135,6 +145,13 @@ export const PROVIDERS = [
     { id: 'mistral', label: 'Mistral' },
 ];
 
+export const AGENT_PROVIDER_MAP: Record<string, string> = {
+  [NodeType.CLAUDE_AGENT]: 'anthropic',
+  [NodeType.DEEPSEEK_AGENT]: 'deepseek',
+  [NodeType.OPENAI_AGENT]: 'openai',
+  [NodeType.MISTRAL_AGENT]: 'mistral',
+};
+
 export interface NodeConfig {
   title: string;
   icon: any;
@@ -144,6 +161,7 @@ export interface NodeConfig {
   modelName?: string;
   desc?: string;
   iconSrc?: string;
+  brandHex?: string;
 }
 
 export const NODE_CONFIGS: Record<string, NodeConfig> = {
@@ -191,6 +209,18 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     color: "slate",
     tooltip: "Carregue um vídeo para usar no pipeline."
   },
+  [NodeType.XML_UPLOAD]: {
+    title: "XML Upload",
+    icon: FileCode,
+    color: "slate",
+    tooltip: "Carregue um arquivo XML para usar como entrada."
+  },
+  [NodeType.PDF_UPLOAD]: {
+    title: "PDF Upload",
+    icon: FileText,
+    color: "slate",
+    tooltip: "Carregue um arquivo PDF para usar como entrada."
+  },
   [NodeType.MESSAGE_OUTPUT]: {
     title: "Message Output",
     icon: Type,
@@ -216,7 +246,7 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     title: "Nano Banana Pro",
     icon: Star,
     color: "rose",
-    modelName: "gemini-3-pro-image",
+    modelName: "gemini-3-pro-image-preview",
     desc: "Alta qualidade, 1K resolution",
     tooltip: "Modelo de imagem avançado (Gemini 3 Pro). Suporta resoluções até 2K.",
     iconSrc: GEMINI_LOGO
@@ -227,31 +257,108 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     icon: Brain,
     color: "purple",
     tooltip: "Agente de texto usando Claude.",
-    iconSrc: '/assets/logos/claude-ai.svg',
-    defaultModel: 'gemini-2.5-flash'
+    iconSrc: CLAUDE_LOGO,
+    defaultModel: 'claude-3-5-sonnet',
+    brandHex: '#C36241'
   },
   [NodeType.DEEPSEEK_AGENT]: {
     title: "Deepseek Agent",
     icon: Brain,
-    color: "orange",
+    color: "indigo",
     tooltip: "Agente de texto usando Deepseek.",
-    iconSrc: '/assets/logos/deepseek.svg',
-    defaultModel: 'gemini-2.5-flash'
+    iconSrc: DEEPSEEK_LOGO,
+    defaultModel: 'deepseek-chat',
+    brandHex: '#4F46E5'
   },
   [NodeType.OPENAI_AGENT]: {
     title: "OpenAI Agent",
     icon: Brain,
     color: "green",
     tooltip: "Agente de texto usando OpenAI.",
-    iconSrc: '/assets/logos/openai.svg',
-    defaultModel: 'gemini-2.5-flash'
+    iconSrc: OPENAI_LOGO,
+    defaultModel: 'gpt-4o'
   },
   [NodeType.MISTRAL_AGENT]: {
     title: "Mistral Agent",
     icon: Brain,
-    color: "indigo",
+    color: "orange",
     tooltip: "Agente de texto usando Mistral.",
-    iconSrc: '/assets/logos/mistral-ai.svg',
-    defaultModel: 'gemini-2.5-flash'
+    iconSrc: MISTRAL_LOGO,
+    defaultModel: 'mistral-large',
+    brandHex: '#F45C25'
+  }
+  ,
+  [NodeType.REDIS]: {
+    title: "Redis",
+    icon: Server,
+    color: "rose",
+    tooltip: "Persistência/Cache com Redis. Configure conexão e operações.",
+    iconSrc: REDIS_LOGO
+  },
+  [NodeType.SUPABASE]: {
+    title: "Supabase",
+    icon: Server,
+    color: "green",
+    tooltip: "Banco de dados e APIs Supabase. Configure URL, chave e tabela.",
+    iconSrc: SUPABASE_LOGO
+  }
+  ,
+  [NodeType.WHATSAPP]: {
+    title: "WhatsApp",
+    icon: Server,
+    color: "green",
+    tooltip: "Comunicação via WhatsApp.",
+    iconSrc: WHATSAPP_LOGO,
+    brandHex: '#25D366'
+  },
+  [NodeType.DISCORD]: {
+    title: "Discord",
+    icon: Server,
+    color: "indigo",
+    tooltip: "Comunicação via Discord.",
+    iconSrc: DISCORD_LOGO,
+    brandHex: '#5865F2'
+  },
+  [NodeType.GMAIL]: {
+    title: "Gmail",
+    icon: Server,
+    color: "rose",
+    tooltip: "Comunicação via Gmail.",
+    iconSrc: GMAIL_LOGO,
+    brandHex: '#EA4335'
+  },
+  [NodeType.TELEGRAM]: {
+    title: "Telegram",
+    icon: Server,
+    color: "cyan",
+    tooltip: "Comunicação via Telegram.",
+    iconSrc: TELEGRAM_LOGO,
+    brandHex: '#229ED9'
+  }
+  ,
+  [NodeType.ROUTER]: {
+    title: "Router",
+    icon: GitBranch,
+    color: "indigo",
+    tooltip: "Direciona o fluxo para diferentes caminhos.",
+  },
+  [NodeType.FUNCTION]: {
+    title: "Function",
+    icon: Code2,
+    color: "purple",
+    tooltip: "Executa uma função sobre o payload.",
+  },
+  [NodeType.CONDITION]: {
+    title: "Condition",
+    icon: Filter,
+    color: "amber",
+    tooltip: "Avalia condição para seguir o fluxo.",
+  }
+  ,
+  [NodeType.WAIT]: {
+    title: "Wait",
+    icon: Timer,
+    color: "slate",
+    tooltip: "Aguarda por um tempo antes de continuar.",
   }
 };

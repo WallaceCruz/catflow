@@ -4,6 +4,8 @@ export enum NodeType {
   PROMPT_INPUT = 'promptInput',
   IMAGE_UPLOAD = 'imageUpload',
   VIDEO_UPLOAD = 'videoUpload',
+  XML_UPLOAD = 'xmlUpload',
+  PDF_UPLOAD = 'pdfUpload',
   MESSAGE_OUTPUT = 'messageOutput',
   // Text/LLM Models
   GEMINI_3_PRO = 'gemini3Pro',          // gemini-3-pro-preview
@@ -22,6 +24,23 @@ export enum NodeType {
   
   IMAGE_DISPLAY = 'imageDisplay',
   VIDEO_DISPLAY = 'videoDisplay',
+
+  // Integrations
+  REDIS = 'redis',
+  SUPABASE = 'supabase',
+
+  // Communication
+  WHATSAPP = 'whatsapp',
+  DISCORD = 'discord',
+  GMAIL = 'gmail',
+  TELEGRAM = 'telegram',
+
+  // Flow Control
+  ROUTER = 'router',
+  FUNCTION = 'function',
+  CONDITION = 'condition',
+  WAIT = 'wait',
+  MERGE = 'merge',
 }
 
 export interface NodeData {
@@ -33,13 +52,18 @@ export interface NodeData {
   videoUrl?: string;
   videoWidth?: number;
   videoHeight?: number;
+  pdfUrl?: string;
+  pdfName?: string;
+  xmlContent?: string;
+  xmlName?: string;
   status?: 'idle' | 'running' | 'completed' | 'error';
   onChange?: (value: string) => void;
-  output?: string; // The output text passed to the next node
-  
+
+  output?: string; 
+
   // Image Gen Configurations
   aspectRatio?: string; // "1:1", "16:9", "4:3", "9:16", "3:4"
-  resolution?: string;  // "1K", "2K" (Only for Pro models)
+  resolution?: string;  // "1K", "2K"
 
   // Model Selection Override
   model?: string; 
@@ -48,6 +72,22 @@ export interface NodeData {
   provider?: string;
   systemMessage?: string;
   apiKey?: string;
+
+  // Redis Configurations
+  redisHost?: string;
+  redisPort?: string;
+  redisDb?: string;
+  redisPassword?: string;
+  redisAction?: 'GET' | 'SET' | 'DEL';
+  redisKey?: string;
+  redisValue?: string;
+
+  // Supabase Configurations
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  supabaseTable?: string;
+  supabaseOperation?: 'select' | 'insert' | 'update' | 'delete';
+  supabasePayload?: string;
 }
 
 export interface PipelineStepResult {

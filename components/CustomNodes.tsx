@@ -1,10 +1,10 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
-import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode } from 'lucide-react';
+import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, Copy } from 'lucide-react';
 
 import { NodeContainer } from './nodes/NodeContainer';
 import { StatusBadge, LabelArea } from './nodes/NodeComponents';
-import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, DEEPSEEK_MODELS, MISTRAL_MODELS, AGENT_PROVIDER_MAP } from '../config';
+import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, DEEPSEEK_MODELS, MISTRAL_MODELS, AGENT_PROVIDER_MAP, HUGGINGFACE_MODELS, KIMI_MODELS, GROK_MODELS } from '../config';
 import { NodeType } from '../types';
 
 // 1. Prompt Input Node
@@ -329,7 +329,7 @@ export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
 export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH];
-  const isExternalAgent = type === NodeType.CLAUDE_AGENT || type === NodeType.DEEPSEEK_AGENT || type === NodeType.OPENAI_AGENT || type === NodeType.MISTRAL_AGENT;
+  const isExternalAgent = type === NodeType.CLAUDE_AGENT || type === NodeType.DEEPSEEK_AGENT || type === NodeType.OPENAI_AGENT || type === NodeType.MISTRAL_AGENT || type === NodeType.HUGGING_FACE_AGENT || type === NodeType.KIMI_AGENT || type === NodeType.GROK_AGENT;
   const fixedProvider = AGENT_PROVIDER_MAP[type as string] || 'google';
 
   const modelsForType = () => {
@@ -337,6 +337,9 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
     if (type === NodeType.CLAUDE_AGENT) return ANTHROPIC_MODELS;
     if (type === NodeType.DEEPSEEK_AGENT) return DEEPSEEK_MODELS;
     if (type === NodeType.MISTRAL_AGENT) return MISTRAL_MODELS;
+    if (type === NodeType.HUGGING_FACE_AGENT) return HUGGINGFACE_MODELS;
+    if (type === NodeType.KIMI_AGENT) return KIMI_MODELS;
+    if (type === NodeType.GROK_AGENT) return GROK_MODELS;
     return TEXT_MODELS;
   };
 
@@ -715,6 +718,83 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Output: String</span>
          <StatusBadge status={data.status} />
+      </div>
+    </NodeContainer>
+  );
+});
+
+export const WebhookNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || { title: 'Webhook', icon: Server, color: 'teal', tooltip: '', iconSrc: undefined } as any;
+
+  const updateNode = useCallback((field: 'webhookPath' | 'webhookMethod' | 'webhookSecret' | 'webhookContentType' | 'webhookPayload', value: string) => {
+    setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n)));
+  }, [id, setNodes]);
+
+  const method = data.webhookMethod || 'POST';
+  const path = (data.webhookPath || id).replace(/[^a-zA-Z0-9-_]/g, '');
+  const secret = data.webhookSecret || '';
+  const ctype = data.webhookContentType || 'application/json';
+  const payload = data.webhookPayload || '';
+
+  const endpointUrl = `${window.location.origin}/api/webhook/${path}`;
+
+  const copyUrl = useCallback(() => {
+    navigator.clipboard.writeText(endpointUrl).catch(() => {});
+  }, [endpointUrl]);
+
+  const simulateRequest = useCallback(() => {
+    const pl = payload || '{"hello":"world"}';
+    setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, webhookPayload: pl, value: pl, status: 'completed' } } : n));
+  }, [id, payload, setNodes]);
+
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} handleLeft={false}>
+      <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
+        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Ponto de entrada externo</span>
+      </div>
+
+      <div className="space-y-2 mb-2 bg-slate-50 dark:bg-slate-800 p-2 rounded border border-slate-100 dark:border-slate-700">
+        <div className="grid grid-cols-3 gap-1 items-center">
+          <label className="text-[9px] text-slate-400 font-semibold">Método</label>
+          <select className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={method} onChange={(e) => updateNode('webhookMethod', e.target.value)}>
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-3 gap-1 items-center">
+          <label className="text-[9px] text-slate-400 font-semibold">Path</label>
+          <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={path} onChange={(e) => updateNode('webhookPath', e.target.value)} placeholder="meu-endpoint" />
+        </div>
+        <div className="grid grid-cols-3 gap-1 items-center">
+          <label className="text-[9px] text-slate-400 font-semibold">Content-Type</label>
+          <select className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={ctype} onChange={(e) => updateNode('webhookContentType', e.target.value)}>
+            <option value="application/json">application/json</option>
+            <option value="text/plain">text/plain</option>
+            <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-3 gap-1 items-center">
+          <label className="text-[9px] text-slate-400 font-semibold">Secret</label>
+          <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={secret} onChange={(e) => updateNode('webhookSecret', e.target.value)} placeholder="Opcional" />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 rounded-md p-2 border border-slate-200 dark:border-slate-700">
+        <div className="text-[10px] font-mono text-slate-600 dark:text-slate-300 truncate">{endpointUrl}</div>
+        <button className="px-2 py-1 rounded text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700" onClick={copyUrl}><Copy size={12} /> Copiar</button>
+      </div>
+
+      <LabelArea label="Payload de teste (JSON ou texto)">
+        <textarea className="nodrag w-full text-[10px] p-2 border border-slate-200 dark:border-slate-600 rounded-md focus:border-blue-500 outline-none resize-none h-16 text-slate-600 dark:text-slate-200 bg-white dark:bg-slate-900 leading-tight placeholder-slate-400 dark:placeholder-slate-500" placeholder='{"hello":"world"}' value={payload} onChange={(e) => updateNode('webhookPayload', e.target.value)} />
+      </LabelArea>
+
+      <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+        <span className="text-[10px] text-slate-400 font-medium">Output: String/JSON</span>
+        <div className="flex items-center gap-2">
+          <button className="px-2 py-1 rounded text-[10px] bg-orange-500 text-white font-bold hover:bg-orange-600" onClick={simulateRequest}>Simular requisição</button>
+        </div>
       </div>
     </NodeContainer>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 import { NodeType } from '../../types';
-import { GEMINI_LOGO, WHATSAPP_LOGO, DISCORD_LOGO, GMAIL_LOGO, TELEGRAM_LOGO, CLAUDE_LOGO, DEEPSEEK_LOGO, OPENAI_LOGO, MISTRAL_LOGO, SUPABASE_LOGO, REDIS_LOGO } from '../../config';
+import { NODE_CONFIGS } from '../../config';
 
 interface SidebarItemProps {
   type: NodeType;
@@ -73,9 +73,9 @@ export const Sidebar = () => {
   const textCount = ['Gemini 3 Pro', 'Gemini 2.5 Flash', 'Gemini Flash Lite', 'Prompt Expert'].filter(matches).length;
   const imageCount = ['Nano Banana', 'Nano Banana Pro'].filter(matches).length;
   const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output'].filter(matches).length;
-  const agentsCount = ['Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI'].filter(matches).length;
-  const integrationsCount = ['Supabase', 'Redis'].filter(matches).length;
-  const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram'].filter(matches).length;
+  const agentsCount = ['Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI', 'Hugging Face', 'Kimi', 'Grok'].filter(matches).length;
+  const integrationsCount = ['Supabase', 'Redis', 'Microsoft Excel', 'Microsoft Word', 'Upstash', 'PostgreSQL', 'TypeORM', 'Neon', 'SQL Server'].filter(matches).length;
+  const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube'].filter(matches).length;
   const flowCount = ['Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
   return (
     <aside className="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full flex flex-col shadow-xl z-20 relative transition-colors duration-300">
@@ -140,16 +140,28 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={communicationOpen}>
             {(!searchTerm || matches('WhatsApp')) && (
-              <SidebarItem type={NodeType.WHATSAPP} iconSrc={WHATSAPP_LOGO} label="WhatsApp" colorClass="bg-emerald-500" />
+              <SidebarItem type={NodeType.WHATSAPP} iconSrc={NODE_CONFIGS[NodeType.WHATSAPP].iconSrc} label="WhatsApp" colorClass="bg-emerald-500" />
             )}
             {(!searchTerm || matches('Discord')) && (
-              <SidebarItem type={NodeType.DISCORD} iconSrc={DISCORD_LOGO} label="Discord" colorClass="bg-indigo-500" />
+              <SidebarItem type={NodeType.DISCORD} iconSrc={NODE_CONFIGS[NodeType.DISCORD].iconSrc} label="Discord" colorClass="bg-indigo-500" />
             )}
             {(!searchTerm || matches('Gmail')) && (
-              <SidebarItem type={NodeType.GMAIL} iconSrc={GMAIL_LOGO} label="Gmail" colorClass="bg-rose-500" />
+              <SidebarItem type={NodeType.GMAIL} iconSrc={NODE_CONFIGS[NodeType.GMAIL].iconSrc} label="Gmail" colorClass="bg-rose-500" />
             )}
             {(!searchTerm || matches('Telegram')) && (
-              <SidebarItem type={NodeType.TELEGRAM} iconSrc={TELEGRAM_LOGO} label="Telegram" colorClass="bg-cyan-500" />
+              <SidebarItem type={NodeType.TELEGRAM} iconSrc={NODE_CONFIGS[NodeType.TELEGRAM].iconSrc} label="Telegram" colorClass="bg-cyan-500" />
+            )}
+          {(!searchTerm || matches('Webhook')) && (
+            <SidebarItem type={NodeType.WEBHOOK} iconSrc={NODE_CONFIGS[NodeType.WEBHOOK].iconSrc} label="Webhook" colorClass="bg-teal-500" />
+          )}
+          {(!searchTerm || matches('YouTube')) && (
+            <SidebarItem type={NodeType.YOUTUBE} iconSrc={NODE_CONFIGS[NodeType.YOUTUBE].iconSrc} label="YouTube" colorClass="bg-rose-500" />
+          )}
+            {(!searchTerm || matches('Microsoft Teams')) && (
+              <SidebarItem type={NodeType.TEAMS} iconSrc={NODE_CONFIGS[NodeType.TEAMS].iconSrc} label="Microsoft Teams" colorClass="bg-indigo-500" />
+            )}
+            {(!searchTerm || matches('Outlook')) && (
+              <SidebarItem type={NodeType.OUTLOOK} iconSrc={NODE_CONFIGS[NodeType.OUTLOOK].iconSrc} label="Outlook" colorClass="bg-blue-500" />
             )}
           </Collapsible>
         </div>
@@ -189,17 +201,17 @@ export const Sidebar = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{textCount}</span>
           </div>
           <Collapsible open={textOpen}>
-            {(!searchTerm || matches('Gemini 3 Pro')) && (
-              <SidebarItem type={NodeType.GEMINI_3_PRO} iconSrc={GEMINI_LOGO} label="Gemini 3 Pro" colorClass="bg-indigo-500" />
-            )}
+          {(!searchTerm || matches('Gemini 3 Pro')) && (
+            <SidebarItem type={NodeType.GEMINI_3_PRO} iconSrc={NODE_CONFIGS[NodeType.GEMINI_3_PRO].iconSrc} label="Gemini 3 Pro" colorClass="bg-indigo-500" />
+          )}
             {(!searchTerm || matches('Gemini 2.5 Flash')) && (
-              <SidebarItem type={NodeType.GEMINI_2_5_FLASH} iconSrc={GEMINI_LOGO} label="Gemini 2.5 Flash" colorClass="bg-cyan-500" />
+              <SidebarItem type={NodeType.GEMINI_2_5_FLASH} iconSrc={NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH].iconSrc} label="Gemini 2.5 Flash" colorClass="bg-cyan-500" />
             )}
             {(!searchTerm || matches('Gemini Flash Lite')) && (
-              <SidebarItem type={NodeType.GEMINI_FLASH_LITE} iconSrc={GEMINI_LOGO} label="Gemini Flash Lite" colorClass="bg-teal-500" />
+              <SidebarItem type={NodeType.GEMINI_FLASH_LITE} iconSrc={NODE_CONFIGS[NodeType.GEMINI_FLASH_LITE].iconSrc} label="Gemini Flash Lite" colorClass="bg-teal-500" />
             )}
             {(!searchTerm || matches('Prompt Expert')) && (
-              <SidebarItem type={NodeType.PROMPT_ENHANCER} iconSrc={GEMINI_LOGO} label="Prompt Expert" colorClass="bg-purple-500" />
+              <SidebarItem type={NodeType.PROMPT_ENHANCER} iconSrc={NODE_CONFIGS[NodeType.PROMPT_ENHANCER].iconSrc} label="Prompt Expert" colorClass="bg-purple-500" />
             )}
           </Collapsible>
         </div>
@@ -214,10 +226,10 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={imageOpen}>
             {(!searchTerm || matches('Nano Banana')) && (
-              <SidebarItem type={NodeType.NANO_BANANA} iconSrc={GEMINI_LOGO} label="Nano Banana" colorClass="bg-amber-500" />
+              <SidebarItem type={NodeType.NANO_BANANA} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA].iconSrc} label="Nano Banana" colorClass="bg-amber-500" />
             )}
             {(!searchTerm || matches('Nano Banana Pro')) && (
-              <SidebarItem type={NodeType.NANO_BANANA_PRO} iconSrc={GEMINI_LOGO} label="Nano Banana Pro" colorClass="bg-rose-500" />
+              <SidebarItem type={NodeType.NANO_BANANA_PRO} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA_PRO].iconSrc} label="Nano Banana Pro" colorClass="bg-rose-500" />
             )}
           </Collapsible>
         </div>
@@ -231,18 +243,27 @@ export const Sidebar = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{agentsCount}</span>
           </div>
           <Collapsible open={agentsOpen}>
-            {(!searchTerm || matches('Claude AI')) && (
-              <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={CLAUDE_LOGO} label="Claude AI" colorClass="bg-slate-500" />
-            )}
-            {(!searchTerm || matches('Deepseek')) && (
-              <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={DEEPSEEK_LOGO} label="Deepseek" colorClass="bg-slate-500" />
-            )}
-            {(!searchTerm || matches('OpenAI')) && (
-              <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={OPENAI_LOGO} label="OpenAI" colorClass="bg-slate-500" />
-            )}
-            {(!searchTerm || matches('Mistral AI')) && (
-              <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={MISTRAL_LOGO} label="Mistral AI" colorClass="bg-slate-500" />
-            )}
+          {(!searchTerm || matches('Claude AI')) && (
+            <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={NODE_CONFIGS[NodeType.CLAUDE_AGENT].iconSrc} label="Claude AI" colorClass="bg-slate-500" />
+          )}
+          {(!searchTerm || matches('Deepseek')) && (
+            <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={NODE_CONFIGS[NodeType.DEEPSEEK_AGENT].iconSrc} label="Deepseek" colorClass="bg-slate-500" />
+          )}
+          {(!searchTerm || matches('OpenAI')) && (
+            <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={NODE_CONFIGS[NodeType.OPENAI_AGENT].iconSrc} label="OpenAI" colorClass="bg-slate-500" />
+          )}
+          {(!searchTerm || matches('Mistral AI')) && (
+            <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={NODE_CONFIGS[NodeType.MISTRAL_AGENT].iconSrc} label="Mistral AI" colorClass="bg-slate-500" />
+          )}
+          {(!searchTerm || matches('Hugging Face')) && (
+            <SidebarItem type={NodeType.HUGGING_FACE_AGENT} iconSrc={NODE_CONFIGS[NodeType.HUGGING_FACE_AGENT].iconSrc} label="Hugging Face" colorClass="bg-amber-500" />
+          )}
+          {(!searchTerm || matches('Kimi')) && (
+            <SidebarItem type={NodeType.KIMI_AGENT} iconSrc={NODE_CONFIGS[NodeType.KIMI_AGENT].iconSrc} label="Kimi" colorClass="bg-cyan-500" />
+          )}
+          {(!searchTerm || matches('Grok')) && (
+            <SidebarItem type={NodeType.GROK_AGENT} iconSrc={NODE_CONFIGS[NodeType.GROK_AGENT].iconSrc} label="Grok" colorClass="bg-indigo-500" />
+          )}
           </Collapsible>
         </div>
 
@@ -255,11 +276,32 @@ export const Sidebar = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{integrationsCount}</span>
           </div>
           <Collapsible open={integrationsOpen}>
-            {(!searchTerm || matches('Supabase')) && (
-              <SidebarItem type={NodeType.SUPABASE} iconSrc={SUPABASE_LOGO} label="Supabase" colorClass="bg-green-500" />
+          {(!searchTerm || matches('Supabase')) && (
+            <SidebarItem type={NodeType.SUPABASE} iconSrc={NODE_CONFIGS[NodeType.SUPABASE].iconSrc} label="Supabase" colorClass="bg-green-500" />
+          )}
+          {(!searchTerm || matches('Redis')) && (
+            <SidebarItem type={NodeType.REDIS} iconSrc={NODE_CONFIGS[NodeType.REDIS].iconSrc} label="Redis" colorClass="bg-rose-500" />
+          )}
+          {(!searchTerm || matches('Upstash')) && (
+            <SidebarItem type={NodeType.UPSTASH} iconSrc={NODE_CONFIGS[NodeType.UPSTASH].iconSrc} label="Upstash" colorClass="bg-emerald-500" />
+          )}
+          {(!searchTerm || matches('PostgreSQL')) && (
+            <SidebarItem type={NodeType.POSTGRESQL} iconSrc={NODE_CONFIGS[NodeType.POSTGRESQL].iconSrc} label="PostgreSQL" colorClass="bg-blue-500" />
+          )}
+          {(!searchTerm || matches('TypeORM')) && (
+            <SidebarItem type={NodeType.TYPEORM} iconSrc={NODE_CONFIGS[NodeType.TYPEORM].iconSrc} label="TypeORM" colorClass="bg-orange-500" />
+          )}
+          {(!searchTerm || matches('Neon')) && (
+            <SidebarItem type={NodeType.NEON} iconSrc={NODE_CONFIGS[NodeType.NEON].iconSrc} label="Neon" colorClass="bg-cyan-500" />
+          )}
+          {(!searchTerm || matches('SQL Server')) && (
+            <SidebarItem type={NodeType.SQL_SERVER} iconSrc={NODE_CONFIGS[NodeType.SQL_SERVER].iconSrc} label="SQL Server" colorClass="bg-rose-500" />
+          )}
+            {(!searchTerm || matches('Microsoft Excel')) && (
+              <SidebarItem type={NodeType.EXCEL} iconSrc={NODE_CONFIGS[NodeType.EXCEL].iconSrc} label="Microsoft Excel" colorClass="bg-green-500" />
             )}
-            {(!searchTerm || matches('Redis')) && (
-              <SidebarItem type={NodeType.REDIS} iconSrc={REDIS_LOGO} label="Redis" colorClass="bg-rose-500" />
+            {(!searchTerm || matches('Microsoft Word')) && (
+              <SidebarItem type={NodeType.WORD} iconSrc={NODE_CONFIGS[NodeType.WORD].iconSrc} label="Microsoft Word" colorClass="bg-blue-500" />
             )}
           </Collapsible>
         </div>

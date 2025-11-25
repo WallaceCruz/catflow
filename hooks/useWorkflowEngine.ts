@@ -197,7 +197,10 @@ export function useWorkflowEngine() {
             targetNode.type === NodeType.CLAUDE_AGENT ||
             targetNode.type === NodeType.DEEPSEEK_AGENT ||
             targetNode.type === NodeType.OPENAI_AGENT ||
-            targetNode.type === NodeType.MISTRAL_AGENT
+            targetNode.type === NodeType.MISTRAL_AGENT ||
+            targetNode.type === NodeType.HUGGING_FACE_AGENT ||
+            targetNode.type === NodeType.KIMI_AGENT ||
+            targetNode.type === NodeType.GROK_AGENT
         ) {
           updateNodeStatus(targetNode.id, { status: 'completed', value: String(payload ?? '') });
           result = payload;
@@ -323,8 +326,9 @@ export function useWorkflowEngine() {
       const videoInputs = nodes.filter(n => n.type === NodeType.VIDEO_UPLOAD);
       const xmlInputs = nodes.filter(n => n.type === NodeType.XML_UPLOAD);
       const pdfInputs = nodes.filter(n => n.type === NodeType.PDF_UPLOAD);
+      const webhookInputs = nodes.filter(n => n.type === NodeType.WEBHOOK);
 
-      if (promptInputs.length === 0 && videoInputs.length === 0 && xmlInputs.length === 0 && pdfInputs.length === 0) {
+      if (promptInputs.length === 0 && videoInputs.length === 0 && xmlInputs.length === 0 && pdfInputs.length === 0 && webhookInputs.length === 0) {
           throw new Error("NO_INPUT_NODE");
       }
 
@@ -369,6 +373,16 @@ export function useWorkflowEngine() {
         }
         updateNodeStatus(pdfNode.id, { status: 'completed' });
         await processNodeChildren(pdfNode.id, pdfPayload, edges, nodeMap, new Set<string>());
+      }
+
+      for (const whNode of webhookInputs) {
+        const whPayload = whNode.data.webhookPayload || whNode.data.value;
+        if (!whPayload || (typeof whPayload === 'string' && whPayload.trim() === '')) {
+          // Webhook pode ser externo; se vazio, apenas não processa
+          continue;
+        }
+        updateNodeStatus(whNode.id, { status: 'completed' });
+        await processNodeChildren(whNode.id, whPayload, edges, nodeMap, new Set<string>());
       }
 
     } catch (error: any) {

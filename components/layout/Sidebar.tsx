@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 import { NodeType } from '../../types';
 import { NODE_CONFIGS } from '../../config';
+import { useUI } from '../../hooks/useUI';
 
 interface SidebarItemProps {
   type: NodeType;
@@ -46,27 +47,39 @@ const Collapsible = ({ open, maxHeight, children }: { open: boolean; maxHeight?:
 );
 
 export const Sidebar = () => {
-  const [inputsOpen, setInputsOpen] = useState(true);
-  const [textOpen, setTextOpen] = useState(true);
-  const [imageOpen, setImageOpen] = useState(true);
-  const [outputsOpen, setOutputsOpen] = useState(true);
-  const [communicationOpen, setCommunicationOpen] = useState(true);
-  const [flowOpen, setFlowOpen] = useState(true);
-  const [agentsOpen, setAgentsOpen] = useState(true);
-  const [integrationsOpen, setIntegrationsOpen] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    searchTerm,
+    setSearchTerm,
+    inputsOpen,
+    textOpen,
+    imageOpen,
+    outputsOpen,
+    communicationOpen,
+    flowOpen,
+    agentsOpen,
+    integrationsOpen,
+    toggleInputs,
+    toggleText,
+    toggleImage,
+    toggleOutputs,
+    toggleCommunication,
+    toggleFlow,
+    toggleAgents,
+    toggleIntegrations,
+  } = useUI();
   const matches = (label: string) => label.toLowerCase().includes(searchTerm.toLowerCase());
   useEffect(() => {
     if (searchTerm) {
-      setInputsOpen(true);
-      setTextOpen(true);
-      setImageOpen(true);
-      setOutputsOpen(true);
-      setAgentsOpen(true);
-      setIntegrationsOpen(true);
-      setCommunicationOpen(true);
-      setFlowOpen(true);
+      if (!inputsOpen) toggleInputs();
+      if (!textOpen) toggleText();
+      if (!imageOpen) toggleImage();
+      if (!outputsOpen) toggleOutputs();
+      if (!agentsOpen) toggleAgents();
+      if (!integrationsOpen) toggleIntegrations();
+      if (!communicationOpen) toggleCommunication();
+      if (!flowOpen) toggleFlow();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
   const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video', 'Upload XML', 'Upload PDF'].filter(matches).length;
   const textCount = ['Gemini 3 Pro', 'Gemini 2.5 Flash', 'Gemini Flash Lite', 'Prompt Expert'].filter(matches).length;
@@ -111,7 +124,7 @@ export const Sidebar = () => {
         </div>
         
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setFlowOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleFlow()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${flowOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Flow Control</h3>
@@ -134,7 +147,7 @@ export const Sidebar = () => {
           </Collapsible>
         </div>
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setCommunicationOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleCommunication()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${communicationOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Communication</h3>
@@ -169,7 +182,7 @@ export const Sidebar = () => {
           </Collapsible>
         </div>
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setInputsOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleInputs()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${inputsOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Inputs</h3>
@@ -196,7 +209,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setTextOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleText()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${textOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Text Agents</h3>
@@ -220,7 +233,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setImageOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleImage()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${imageOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Image Generation</h3>
@@ -238,7 +251,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setAgentsOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleAgents()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${agentsOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Agents</h3>
@@ -271,7 +284,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setIntegrationsOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleIntegrations()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${integrationsOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Integrations</h3>
@@ -310,7 +323,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => setOutputsOpen(v => !v)}>
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleOutputs()}>
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ChevronDown size={14} className={`${outputsOpen ? '' : 'rotate-180'} transition-transform`} />
               <h3 className="text-[11px] font-bold uppercase tracking-wider">Outputs</h3>

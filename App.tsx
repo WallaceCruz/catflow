@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useRef, useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -25,6 +25,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { KeySelectionModal } from './components/layout/KeySelectionModal';
 import { ConfirmationModal } from './components/layout/ConfirmationModal';
+import { useUI } from './hooks/useUI';
 
 // --- Configuration ---
 const nodeTypes = {
@@ -91,7 +92,7 @@ function FlowContent() {
   
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodesData);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [showClearModal, setShowClearModal] = useState(false);
+  const { showClearModal, openClearModal, closeClearModal } = useUI();
   
   const { project, toObject } = useReactFlow();
   const { isDarkMode } = useTheme();
@@ -226,15 +227,15 @@ function FlowContent() {
 
   // Trigger Modal
   const requestClear = useCallback(() => {
-    setShowClearModal(true);
-  }, []);
+    openClearModal();
+  }, [openClearModal]);
 
   // Action
   const confirmClear = useCallback(() => {
     setNodes([]);
     setEdges([]);
-    setShowClearModal(false);
-  }, [setNodes, setEdges]);
+    closeClearModal();
+  }, [setNodes, setEdges, closeClearModal]);
 
   const handleSelectKey = async () => {
     if (window.aistudio) {
@@ -272,7 +273,7 @@ function FlowContent() {
         isOpen={showClearModal}
         title="Limpar Fluxo"
         message="Tem certeza que deseja remover todos os nós e conexões? Esta ação não pode ser desfeita e você perderá o trabalho não salvo."
-        onClose={() => setShowClearModal(false)}
+        onClose={() => closeClearModal()}
         onConfirm={confirmClear}
       />
 

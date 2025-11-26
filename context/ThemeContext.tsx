@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useThemeStore } from '../stores/themeStore';
 
 type ThemeContextType = {
   isDarkMode: boolean;
@@ -8,19 +9,14 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check localStorage or system preference
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('flowgen-theme');
-      if (savedTheme) {
-        return savedTheme === 'dark';
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
+  const { isDarkMode, toggleTheme, setDarkMode } = useThemeStore((s) => ({
+    isDarkMode: s.isDarkMode,
+    toggleTheme: s.toggleTheme,
+    setDarkMode: s.setDarkMode,
+  }));
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     if (isDarkMode) {
       root.classList.add('dark');
@@ -31,12 +27,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedTheme = localStorage.getItem('flowgen-theme');
+    if (savedTheme) {
+      setDarkMode(savedTheme === 'dark');
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setDarkMode(prefersDark);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggle = () => {
+    toggleTheme();
   };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme: toggle }}>
       {children}
     </ThemeContext.Provider>
   );

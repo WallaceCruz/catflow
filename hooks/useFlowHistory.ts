@@ -1,11 +1,9 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useReactFlow, Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges, addEdge, Connection } from 'reactflow';
+import { useFlowHistoryStore } from '../stores/flowHistoryStore';
 
-interface HistoryState {
-  nodes: Node[];
-  edges: Edge[];
-}
+ 
 
 export function useFlowHistory(
   initialNodes: Node[], 
@@ -13,46 +11,34 @@ export function useFlowHistory(
   setNodes: (nodes: Node[] | ((nodes: Node[]) => Node[])) => void,
   setEdges: (edges: Edge[] | ((edges: Edge[]) => Edge[])) => void
 ) {
-  const [past, setPast] = useState<HistoryState[]>([]);
-  const [future, setFuture] = useState<HistoryState[]>([]);
+  const { past, future, push, undo: undoStore, redo: redoStore } = useFlowHistoryStore((s) => ({
+    past: s.past,
+    future: s.future,
+    push: s.push,
+    undo: s.undo,
+    redo: s.redo,
+  }));
   
   // Acessamos o estado atual via getNodes/getEdges do ReactFlow para garantir frescor nos snapshots
   const { getNodes, getEdges } = useReactFlow();
 
   const takeSnapshot = useCallback(() => {
-    setPast((oldPast) => {
-      // Otimização: Limitar histórico a 50 passos se necessário
-      const newPast = [...oldPast, { nodes: getNodes(), edges: getEdges() }];
-      return newPast.length > 50 ? newPast.slice(1) : newPast;
-    });
-    setFuture([]); 
-  }, [getNodes, getEdges]);
+    push({ nodes: getNodes(), edges: getEdges() });
+  }, [getNodes, getEdges, push]);
 
   const undo = useCallback(() => {
-    if (past.length === 0) return;
-
-    const previous = past[past.length - 1];
-    const newPast = past.slice(0, past.length - 1);
-
-    setPast(newPast);
-    setFuture((oldFuture) => [{ nodes: getNodes(), edges: getEdges() }, ...oldFuture]);
-    
-    setNodes(previous.nodes);
-    setEdges(previous.edges);
-  }, [past, getNodes, getEdges, setNodes, setEdges]);
+    const prev = undoStore({ nodes: getNodes(), edges: getEdges() });
+    if (!prev) return;
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+  }, [undoStore, getNodes, getEdges, setNodes, setEdges]);
 
   const redo = useCallback(() => {
-    if (future.length === 0) return;
-
-    const next = future[0];
-    const newFuture = future.slice(1);
-
-    setPast((oldPast) => [...oldPast, { nodes: getNodes(), edges: getEdges() }]);
-    setFuture(newFuture);
-
+    const next = redoStore({ nodes: getNodes(), edges: getEdges() });
+    if (!next) return;
     setNodes(next.nodes);
     setEdges(next.edges);
-  }, [future, getNodes, getEdges, setNodes, setEdges]);
+  }, [redoStore, getNodes, getEdges, setNodes, setEdges]);
 
   // Wrappers para eventos do React Flow que disparam snapshots
   const onNodesChange = useCallback(

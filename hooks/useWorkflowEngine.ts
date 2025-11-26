@@ -1,17 +1,23 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useReactFlow } from 'reactflow';
 import { NodeType } from '../types';
 import { NODE_CONFIGS } from '../config';
 import { createContainer } from '../core/di/container';
+import { useWorkflowStore } from '../stores/workflowStore';
 
 /**
  * Executor de workflows com injeção de dependências e baixa acoplamento.
  */
 export function useWorkflowEngine() {
   const { getNodes, getEdges, setNodes } = useReactFlow();
-  const [isRunning, setIsRunning] = useState(false);
-  const [authError, setAuthError] = useState(false);
+  const { isRunning, authError, setAuthError, startRun, finishRun } = useWorkflowStore((s) => ({
+    isRunning: s.isRunning,
+    authError: s.authError,
+    setAuthError: s.setAuthError,
+    startRun: s.startRun,
+    finishRun: s.finishRun,
+  }));
   const deps = createContainer();
 
   // Helper para atualizar dados de um nó específico
@@ -236,8 +242,7 @@ export function useWorkflowEngine() {
    * Dispara a execução do workflow corrente.
    */
   const runWorkflow = async () => {
-    setIsRunning(true);
-    setAuthError(false);
+    startRun();
     
     // Limpa erros anteriores
     setNodes((nds) => nds.map(n => ({ 
@@ -332,7 +337,7 @@ export function useWorkflowEngine() {
       }
 
     } finally {
-      setIsRunning(false);
+      finishRun();
     }
   };
 

@@ -11,7 +11,7 @@ import ReactFlow, {
 } from 'reactflow';
 
 import { NodeType } from './types';
-import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode } from './components/CustomNodes';
+import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -41,6 +41,9 @@ const nodeTypes = {
   [NodeType.DEEPSEEK_AGENT]: TextGenNode,
   [NodeType.OPENAI_AGENT]: TextGenNode,
   [NodeType.MISTRAL_AGENT]: TextGenNode,
+  [NodeType.HUGGING_FACE_AGENT]: TextGenNode,
+  [NodeType.KIMI_AGENT]: TextGenNode,
+  [NodeType.GROK_AGENT]: TextGenNode,
   [NodeType.IMAGE_GENERATOR]: ImageGenNode, 
   [NodeType.NANO_BANANA]: ImageGenNode,     
   [NodeType.NANO_BANANA_PRO]: ImageGenNode, 
@@ -49,10 +52,21 @@ const nodeTypes = {
   [NodeType.VIDEO_DISPLAY]: VideoOutputNode,
   [NodeType.REDIS]: RedisNode,
   [NodeType.SUPABASE]: SupabaseNode,
+  [NodeType.UPSTASH]: RedisNode,
+  [NodeType.POSTGRESQL]: CommunicationNode,
+  [NodeType.SQL_SERVER]: CommunicationNode,
+  [NodeType.NEON]: CommunicationNode,
+  [NodeType.TYPEORM]: CommunicationNode,
   [NodeType.WHATSAPP]: CommunicationNode,
   [NodeType.DISCORD]: CommunicationNode,
   [NodeType.GMAIL]: CommunicationNode,
   [NodeType.TELEGRAM]: CommunicationNode,
+  [NodeType.YOUTUBE]: CommunicationNode,
+  [NodeType.WEBHOOK]: WebhookNode,
+  [NodeType.TEAMS]: CommunicationNode,
+  [NodeType.OUTLOOK]: CommunicationNode,
+  [NodeType.EXCEL]: CommunicationNode,
+  [NodeType.WORD]: CommunicationNode,
   [NodeType.ROUTER]: RouterNode,
   [NodeType.FUNCTION]: FunctionNode,
   [NodeType.CONDITION]: ConditionNode,

@@ -16,6 +16,9 @@ export enum NodeType {
   DEEPSEEK_AGENT = 'deepseekAgent',
   OPENAI_AGENT = 'openaiAgent',
   MISTRAL_AGENT = 'mistralAgent',
+  HUGGING_FACE_AGENT = 'huggingFaceAgent',
+  KIMI_AGENT = 'kimiAgent',
+  GROK_AGENT = 'grokAgent',
   
   // Image Models
   IMAGE_GENERATOR = 'imageGenerator', 
@@ -28,12 +31,23 @@ export enum NodeType {
   // Integrations
   REDIS = 'redis',
   SUPABASE = 'supabase',
+  EXCEL = 'excel',
+  WORD = 'word',
+  POSTGRESQL = 'postgresql',
+  TYPEORM = 'typeorm',
+  UPSTASH = 'upstash',
+  NEON = 'neon',
+  SQL_SERVER = 'sqlServer',
 
   // Communication
   WHATSAPP = 'whatsapp',
   DISCORD = 'discord',
   GMAIL = 'gmail',
   TELEGRAM = 'telegram',
+  WEBHOOK = 'webhook',
+  TEAMS = 'teams',
+  OUTLOOK = 'outlook',
+  YOUTUBE = 'youtube',
 
   // Flow Control
   ROUTER = 'router',
@@ -88,6 +102,13 @@ export interface NodeData {
   supabaseTable?: string;
   supabaseOperation?: 'select' | 'insert' | 'update' | 'delete';
   supabasePayload?: string;
+
+  // Webhook Configurations
+  webhookMethod?: 'GET' | 'POST';
+  webhookPath?: string;
+  webhookSecret?: string;
+  webhookContentType?: string;
+  webhookPayload?: string;
 }
 
 export interface PipelineStepResult {

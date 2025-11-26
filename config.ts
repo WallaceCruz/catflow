@@ -21,12 +21,26 @@ export const CLAUDE_LOGO = new URL('./assets/logos/claude-ai.svg', import.meta.u
 export const DEEPSEEK_LOGO = new URL('./assets/logos/deepseek.svg', import.meta.url).href;
 export const OPENAI_LOGO = new URL('./assets/logos/openai.svg', import.meta.url).href;
 export const MISTRAL_LOGO = new URL('./assets/logos/mistral-ai.svg', import.meta.url).href;
+export const HUGGING_FACE_LOGO = new URL('./assets/logos/hugging_face.svg', import.meta.url).href;
+export const KIMI_LOGO = new URL('./assets/logos/kimi-icon.svg', import.meta.url).href;
+export const GROK_LOGO = new URL('./assets/logos/grok-light.svg', import.meta.url).href;
 export const REDIS_LOGO = new URL('./assets/logos/redis.svg', import.meta.url).href;
 export const SUPABASE_LOGO = new URL('./assets/logos/supabase.svg', import.meta.url).href;
+export const POSTGRESQL_LOGO = new URL('./assets/logos/postgresql.svg', import.meta.url).href;
+export const TYPEORM_LOGO = new URL('./assets/logos/typeorm.svg', import.meta.url).href;
+export const UPSTASH_LOGO = new URL('./assets/logos/upstash.svg', import.meta.url).href;
+export const NEON_LOGO = new URL('./assets/logos/neon.svg', import.meta.url).href;
+export const SQL_SERVER_LOGO = new URL('./assets/logos/sql-server.svg', import.meta.url).href;
 export const DISCORD_LOGO = new URL('./assets/logos/discord.svg', import.meta.url).href;
 export const WHATSAPP_LOGO = new URL('./assets/logos/whatsapp.svg', import.meta.url).href;
 export const GMAIL_LOGO = new URL('./assets/logos/gmail.svg', import.meta.url).href;
 export const TELEGRAM_LOGO = new URL('./assets/logos/telegram.svg', import.meta.url).href;
+export const WEBHOOK_LOGO = new URL('./assets/logos/webhook.svg', import.meta.url).href;
+export const EXCEL_LOGO = new URL('./assets/logos/microsoft-excel.svg', import.meta.url).href;
+export const WORD_LOGO = new URL('./assets/logos/microsoft-word.svg', import.meta.url).href;
+export const OUTLOOK_LOGO = new URL('./assets/logos/microsoft-outlook.svg', import.meta.url).href;
+export const TEAMS_LOGO = new URL('./assets/logos/microsoft-teams.svg', import.meta.url).href;
+export const YOUTUBE_LOGO = new URL('./assets/logos/youtube.svg', import.meta.url).href;
 
 export const NODE_THEME = {
   blue: {
@@ -137,12 +151,30 @@ export const MISTRAL_MODELS = [
   { id: 'mistral-small', label: 'Mistral Small' },
 ];
 
+export const HUGGINGFACE_MODELS = [
+  { id: 'meta-llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
+  { id: 'mistral-7b-instruct', label: 'Mistral 7B' },
+];
+
+export const KIMI_MODELS = [
+  { id: 'kimi-1.5-mini', label: 'Kimi 1.5 Mini' },
+  { id: 'kimi-1.5-pro', label: 'Kimi 1.5 Pro' },
+];
+
+export const GROK_MODELS = [
+  { id: 'grok-2-mini', label: 'Grok 2 Mini' },
+  { id: 'grok-2', label: 'Grok 2' },
+];
+
 export const PROVIDERS = [
     { id: 'google', label: 'Google AI' },
     { id: 'openai', label: 'OpenAI' },
     { id: 'anthropic', label: 'Claude (Anthropic)' },
     { id: 'deepseek', label: 'Deepseek' },
     { id: 'mistral', label: 'Mistral' },
+    { id: 'huggingface', label: 'Hugging Face' },
+    { id: 'kimi', label: 'Kimi' },
+    { id: 'xai', label: 'xAI (Grok)' },
 ];
 
 export const AGENT_PROVIDER_MAP: Record<string, string> = {
@@ -150,6 +182,9 @@ export const AGENT_PROVIDER_MAP: Record<string, string> = {
   [NodeType.DEEPSEEK_AGENT]: 'deepseek',
   [NodeType.OPENAI_AGENT]: 'openai',
   [NodeType.MISTRAL_AGENT]: 'mistral',
+  [NodeType.HUGGING_FACE_AGENT]: 'huggingface',
+  [NodeType.KIMI_AGENT]: 'kimi',
+  [NodeType.GROK_AGENT]: 'xai',
 };
 
 export interface NodeConfig {
@@ -288,6 +323,34 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     brandHex: '#F45C25'
   }
   ,
+  [NodeType.HUGGING_FACE_AGENT]: {
+    title: "Hugging Face Agent",
+    icon: Brain,
+    color: "amber",
+    tooltip: "Agente de texto usando Hugging Face.",
+    iconSrc: HUGGING_FACE_LOGO,
+    defaultModel: 'meta-llama-3.1-8b-instruct',
+    brandHex: '#FFCC4D'
+  },
+  [NodeType.KIMI_AGENT]: {
+    title: "Kimi Agent",
+    icon: Brain,
+    color: "cyan",
+    tooltip: "Agente de texto usando Kimi.",
+    iconSrc: KIMI_LOGO,
+    defaultModel: 'kimi-1.5-mini',
+    brandHex: '#00B2FF'
+  },
+  [NodeType.GROK_AGENT]: {
+    title: "Grok Agent",
+    icon: Brain,
+    color: "indigo",
+    tooltip: "Agente de texto usando Grok (xAI).",
+    iconSrc: GROK_LOGO,
+    defaultModel: 'grok-2-mini',
+    brandHex: '#000000'
+  }
+  ,
   [NodeType.REDIS]: {
     title: "Redis",
     icon: Server,
@@ -301,6 +364,64 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     color: "green",
     tooltip: "Banco de dados e APIs Supabase. Configure URL, chave e tabela.",
     iconSrc: SUPABASE_LOGO
+  }
+  ,
+  [NodeType.POSTGRESQL]: {
+    title: "PostgreSQL",
+    icon: Server,
+    color: "blue",
+    tooltip: "Integração com PostgreSQL.",
+    iconSrc: POSTGRESQL_LOGO,
+    brandHex: '#336791'
+  },
+  [NodeType.SQL_SERVER]: {
+    title: "SQL Server",
+    icon: Server,
+    color: "rose",
+    tooltip: "Integração com Microsoft SQL Server.",
+    iconSrc: SQL_SERVER_LOGO,
+    brandHex: '#CC2927'
+  },
+  [NodeType.NEON]: {
+    title: "Neon",
+    icon: Server,
+    color: "cyan",
+    tooltip: "Postgres serverless com Neon.",
+    iconSrc: NEON_LOGO,
+    brandHex: '#00E699'
+  },
+  [NodeType.TYPEORM]: {
+    title: "TypeORM",
+    icon: Server,
+    color: "orange",
+    tooltip: "Integração ORM com TypeORM.",
+    iconSrc: TYPEORM_LOGO,
+    brandHex: '#F67F2E'
+  },
+  [NodeType.UPSTASH]: {
+    title: "Upstash",
+    icon: Server,
+    color: "green",
+    tooltip: "Serverless Redis/Queue da Upstash.",
+    iconSrc: UPSTASH_LOGO,
+    brandHex: '#47C4A2'
+  }
+  ,
+  [NodeType.EXCEL]: {
+    title: "Microsoft Excel",
+    icon: Server,
+    color: "green",
+    tooltip: "Integração com Microsoft Excel.",
+    iconSrc: EXCEL_LOGO,
+    brandHex: '#217346'
+  },
+  [NodeType.WORD]: {
+    title: "Microsoft Word",
+    icon: Server,
+    color: "blue",
+    tooltip: "Integração com Microsoft Word.",
+    iconSrc: WORD_LOGO,
+    brandHex: '#2B579A'
   }
   ,
   [NodeType.WHATSAPP]: {
@@ -334,6 +455,41 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     tooltip: "Comunicação via Telegram.",
     iconSrc: TELEGRAM_LOGO,
     brandHex: '#229ED9'
+  }
+  ,
+  [NodeType.WEBHOOK]: {
+    title: "Webhook",
+    icon: Server,
+    color: "purple",
+    tooltip: "Recebe requisições HTTP para acionar o fluxo.",
+    iconSrc: WEBHOOK_LOGO,
+    
+  }
+  ,
+  [NodeType.TEAMS]: {
+    title: "Microsoft Teams",
+    icon: Server,
+    color: "indigo",
+    tooltip: "Comunicação via Microsoft Teams.",
+    iconSrc: TEAMS_LOGO,
+    brandHex: '#6264A7'
+  },
+  [NodeType.OUTLOOK]: {
+    title: "Outlook",
+    icon: Server,
+    color: "blue",
+    tooltip: "Comunicação via Outlook.",
+    iconSrc: OUTLOOK_LOGO,
+    brandHex: '#0078D4'
+  }
+  ,
+  [NodeType.YOUTUBE]: {
+    title: "YouTube",
+    icon: Server,
+    color: "rose",
+    tooltip: "Integração com YouTube.",
+    iconSrc: YOUTUBE_LOGO,
+    brandHex: '#FF0000'
   }
   ,
   [NodeType.ROUTER]: {

@@ -1,0 +1,33 @@
+import { Cache, ImageGenerator, Logger, RedisClient, SupabaseClient, TextGenerator } from '../interfaces';
+import { createTextGenerator } from '@/services/textGenerator';
+import { createImageGenerator } from '@/services/imageGenerator';
+import { createSupabaseClient } from '@/services/supabaseService';
+import { createRedisClient } from '@/services/redisService';
+import { logger } from '@/utils/logger';
+
+export interface Container {
+  text: TextGenerator;
+  image: ImageGenerator;
+  supabase: SupabaseClient;
+  redis: RedisClient;
+  cache: Cache;
+  logger: Logger;
+}
+
+class MapCache implements Cache {
+  private store = new Map<string, string>();
+  get(key: string) { return this.store.get(key); }
+  set(key: string, value: string) { this.store.set(key, value); }
+}
+
+export const createContainer = (): Container => {
+  const cache = new MapCache();
+  return {
+    text: createTextGenerator(cache),
+    image: createImageGenerator(),
+    supabase: createSupabaseClient(),
+    redis: createRedisClient(),
+    cache,
+    logger,
+  };
+};

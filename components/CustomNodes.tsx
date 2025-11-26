@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
-import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, Copy } from 'lucide-react';
+import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy } from 'lucide-react';
 
 import { NodeContainer } from './nodes/NodeContainer';
 import { StatusBadge, LabelArea } from './nodes/NodeComponents';
@@ -8,6 +8,10 @@ import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, 
 import { NodeType } from '../types';
 
 // 1. Prompt Input Node
+/**
+ * Nó de entrada de texto do usuário.
+ * Renderiza textarea e publica o valor para nós seguintes.
+ */
 export const PromptInputNode = memo(({ id, type, data, selected }: NodeProps) => {
   const isError = data.status === 'error';
   const textAreaClasses = isError
@@ -34,6 +38,10 @@ export const PromptInputNode = memo(({ id, type, data, selected }: NodeProps) =>
 });
 
 // 2. Image Upload Node
+/**
+ * Nó de upload de imagem.
+ * Captura URL de imagem e expõe como saída.
+ */
 export const ImageUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.IMAGE_UPLOAD];
@@ -128,6 +136,10 @@ export const ImageUploadNode = memo(({ id, type, data, selected }: NodeProps) =>
 });
 
 // 2b. Video Upload Node
+/**
+ * Nó de upload de vídeo.
+ * Captura URL de vídeo e expõe como saída.
+ */
 export const VideoUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.VIDEO_UPLOAD];
@@ -236,6 +248,9 @@ export const VideoUploadNode = memo(({ id, type, data, selected }: NodeProps) =>
 });
 
 // 2c. XML Upload Node
+/**
+ * Nó de upload de XML.
+ */
 export const XmlUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.XML_UPLOAD];
@@ -283,6 +298,9 @@ export const XmlUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 2d. PDF Upload Node
+/**
+ * Nó de upload de PDF.
+ */
 export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.PDF_UPLOAD];
@@ -326,6 +344,10 @@ export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 3. Generic LLM Node
+/**
+ * Nó de agentes de texto/LLM.
+ * Suporta seleção de modelo, provedor e system message.
+ */
 export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH];
@@ -417,13 +439,17 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
       )}
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Output: String</span>
-         <StatusBadge status={data.status} />
+         <StatusBadge status={data.value ? 'completed' : data.status} />
       </div>
     </NodeContainer>
   );
 });
 
 // 4. Image Generator Node
+/**
+ * Nó de geração de imagem.
+ * Configura aspecto e resolução e chama gerador.
+ */
 export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.NANO_BANANA];
@@ -485,13 +511,16 @@ export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
       </div>
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Output: Image</span>
-         <StatusBadge status={data.status} />
+         <StatusBadge status={data.imageUrl ? 'completed' : data.status} />
       </div>
     </NodeContainer>
   );
 });
 
 // 5. Output Display Node
+/**
+ * Nó de visualização de imagem.
+ */
 export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   return (
     <NodeContainer nodeId={id} nodeType={type} selected={selected} title="Canvas View" icon={Eye} color="green" handleRight={false} tooltip="Visualizador final.">
@@ -513,6 +542,9 @@ export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 6. Message Output Node
+/**
+ * Nó de saída de mensagem textual.
+ */
 export const MessageOutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.MESSAGE_OUTPUT];
   return (
@@ -530,6 +562,9 @@ export const MessageOutputNode = memo(({ id, type, data, selected }: NodeProps) 
 });
 
 // 7. Video Output Node
+/**
+ * Nó de visualização de vídeo.
+ */
 export const VideoOutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.VIDEO_DISPLAY];
   return (
@@ -547,6 +582,10 @@ export const VideoOutputNode = memo(({ id, type, data, selected }: NodeProps) =>
 });
 
 // 8. Redis Node (Configurações e Operações)
+/**
+ * Nó de integração Redis/Upstash via REST.
+ * Permite GET/SET/DEL com host/token.
+ */
 export const RedisNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.REDIS];
@@ -628,6 +667,10 @@ export const RedisNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 9. Supabase Node (Configuração e Operações)
+/**
+ * Nó de integração Supabase.
+ * Permite operações select/insert/update/delete com payload JSON.
+ */
 export const SupabaseNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.SUPABASE];
@@ -697,6 +740,9 @@ export const SupabaseNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 10. Communication Node (Generic placeholder)
+/**
+ * Nó genérico de comunicação/integrations placeholder.
+ */
 export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || {
     title: 'Communication', icon: Server, color: 'green', tooltip: '', iconSrc: undefined, brandHex: undefined
@@ -723,6 +769,10 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
   );
 });
 
+/**
+ * Nó de Webhook: ponto de entrada externo de HTTP.
+ * Permite configurar método, path, content-type e payload de teste.
+ */
 export const WebhookNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || { title: 'Webhook', icon: Server, color: 'teal', tooltip: '', iconSrc: undefined } as any;
@@ -801,6 +851,9 @@ export const WebhookNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 11. Router Node
+/**
+ * Nó de roteamento: direciona payload para múltiplas saídas.
+ */
 export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.ROUTER];
   const { setNodes, getEdges } = useReactFlow();
@@ -914,6 +967,9 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 12. Function Node
+/**
+ * Nó de função: aplica transformação JavaScript ao payload.
+ */
 export const FunctionNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.FUNCTION];
   const { setNodes } = useReactFlow();
@@ -950,6 +1006,9 @@ export const FunctionNode = memo(({ id, type, data, selected }: NodeProps) => {
 });
 
 // 13. Condition Node
+/**
+ * Nó de condição: avalia expressão booleana e seleciona saída.
+ */
 export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.CONDITION];
   const { setNodes } = useReactFlow();
@@ -1002,6 +1061,9 @@ export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
   );
 });
 
+/**
+ * Nó de espera: aguarda tempo antes de continuar o fluxo.
+ */
 export const WaitNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.WAIT];
   const { setNodes } = useReactFlow();
@@ -1042,6 +1104,9 @@ export const WaitNode = memo(({ id, type, data, selected }: NodeProps) => {
   );
 });
 
+/**
+ * Nó de merge: combina múltiplas entradas em uma saída.
+ */
 export const MergeNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.MERGE];
   const { setNodes, getEdges } = useReactFlow();
@@ -1052,7 +1117,6 @@ export const MergeNode = memo(({ id, type, data, selected }: NodeProps) => {
 
   const expected = parseInt(String(data.mergeExpected ?? '2'), 10) || 2;
   const strategy = data.mergeStrategy || 'concat';
-  const autoReset = !!data.mergeAutoReset;
   const arrayMode = data.mergeArrayMode || 'replace';
   const sourcePrefix = String(data.mergeSourcePrefix || '');
   const edgesIn = getEdges().filter(e => e.target === id);

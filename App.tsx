@@ -153,7 +153,9 @@ function FlowContent() {
 
       if (type === NodeType.PROMPT_INPUT) {
          newNode.data.onChange = (val: string) => {
-            setNodes((nds) => nds.map((n) => n.id === newNode.id ? { ...n, data: { ...n.data, value: val } } : n));
+            setNodes((nds) => nds.map((n) => n.id === newNode.id 
+              ? { ...n, data: { ...n.data, value: val, status: 'idle' } } 
+              : n));
          };
       }
 
@@ -252,7 +254,7 @@ function FlowContent() {
         if (node.type === NodeType.PROMPT_INPUT && !node.data.onChange) {
           return {
             ...node,
-            data: { ...node.data, onChange: (val: string) => setNodes(ns => ns.map(n => n.id === node.id ? { ...n, data: { ...n.data, value: val } } : n)) },
+            data: { ...node.data, onChange: (val: string) => setNodes(ns => ns.map(n => n.id === node.id ? { ...n, data: { ...n.data, value: val, status: 'idle' } } : n)) },
           };
         }
         return node;
@@ -276,7 +278,7 @@ function FlowContent() {
 
       <Sidebar />
       
-      <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
+      <div className="flex-1 h-full relative ml-80" ref={reactFlowWrapper}>
         <Header 
           onUndo={undo} onRedo={redo} canUndo={past.length > 0} canRedo={future.length > 0}
           onSelectKey={handleSelectKey} onClear={requestClear} onSave={onSave} onShare={onShare} onRun={runWorkflow} isRunning={isRunning}

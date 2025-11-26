@@ -8,10 +8,9 @@ interface SidebarItemProps {
   icon?: any;
   iconSrc?: string;
   label: string;
-  colorClass: string;
 }
 
-const SidebarItem = ({ type, icon: Icon, iconSrc, label, colorClass }: SidebarItemProps) => {
+const SidebarItem = ({ type, icon: Icon, iconSrc, label }: SidebarItemProps) => {
   const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -78,7 +77,7 @@ export const Sidebar = () => {
   const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube'].filter(matches).length;
   const flowCount = ['Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
   return (
-    <aside className="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full flex flex-col shadow-xl z-20 relative transition-colors duration-300">
+    <aside className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-xl z-30 transition-colors duration-300">
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-2 text-orange-600 mb-1">
@@ -95,7 +94,11 @@ export const Sidebar = () => {
       </div>
       
       {/* Scrollable Container */}
-      <div className="p-5 overflow-y-auto flex-1 custom-scrollbar overflow-x-hidden">
+      <div
+        className="p-5 overflow-y-scroll flex-1 custom-scrollbar overflow-x-hidden overscroll-y-contain overscroll-x-none"
+        onWheel={(e) => e.stopPropagation()}
+        style={{ scrollbarGutter: 'stable both-edges' }}
+      >
         <div className="mb-3 relative">
           <Search size={14} className="absolute left-3 top-2.5 text-slate-400 dark:text-slate-500" />
           <input
@@ -117,16 +120,16 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={flowOpen}>
             {(!searchTerm || matches('Router')) && (
-              <SidebarItem type={NodeType.ROUTER} icon={GitBranch} label="Router" colorClass="bg-indigo-500" />
+              <SidebarItem type={NodeType.ROUTER} icon={GitBranch} label="Router" />
             )}
             {(!searchTerm || matches('Function')) && (
-              <SidebarItem type={NodeType.FUNCTION} icon={Code2} label="Function" colorClass="bg-purple-500" />
+              <SidebarItem type={NodeType.FUNCTION} icon={Code2} label="Function" />
             )}
             {(!searchTerm || matches('Condition')) && (
-              <SidebarItem type={NodeType.CONDITION} icon={Filter} label="Condition" colorClass="bg-amber-500" />
+              <SidebarItem type={NodeType.CONDITION} icon={Filter} label="Condition" />
             )}
             {(!searchTerm || matches('Wait')) && (
-              <SidebarItem type={NodeType.WAIT} icon={Timer} label="Wait" colorClass="bg-slate-500" />
+              <SidebarItem type={NodeType.WAIT} icon={Timer} label="Wait" />
             )}
           </Collapsible>
         </div>
@@ -140,28 +143,28 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={communicationOpen}>
             {(!searchTerm || matches('WhatsApp')) && (
-              <SidebarItem type={NodeType.WHATSAPP} iconSrc={NODE_CONFIGS[NodeType.WHATSAPP].iconSrc} label="WhatsApp" colorClass="bg-emerald-500" />
+              <SidebarItem type={NodeType.WHATSAPP} iconSrc={NODE_CONFIGS[NodeType.WHATSAPP].iconSrc} label="WhatsApp" />
             )}
             {(!searchTerm || matches('Discord')) && (
-              <SidebarItem type={NodeType.DISCORD} iconSrc={NODE_CONFIGS[NodeType.DISCORD].iconSrc} label="Discord" colorClass="bg-indigo-500" />
+              <SidebarItem type={NodeType.DISCORD} iconSrc={NODE_CONFIGS[NodeType.DISCORD].iconSrc} label="Discord" />
             )}
             {(!searchTerm || matches('Gmail')) && (
-              <SidebarItem type={NodeType.GMAIL} iconSrc={NODE_CONFIGS[NodeType.GMAIL].iconSrc} label="Gmail" colorClass="bg-rose-500" />
+              <SidebarItem type={NodeType.GMAIL} iconSrc={NODE_CONFIGS[NodeType.GMAIL].iconSrc} label="Gmail" />
             )}
             {(!searchTerm || matches('Telegram')) && (
-              <SidebarItem type={NodeType.TELEGRAM} iconSrc={NODE_CONFIGS[NodeType.TELEGRAM].iconSrc} label="Telegram" colorClass="bg-cyan-500" />
+              <SidebarItem type={NodeType.TELEGRAM} iconSrc={NODE_CONFIGS[NodeType.TELEGRAM].iconSrc} label="Telegram" />
             )}
           {(!searchTerm || matches('Webhook')) && (
-            <SidebarItem type={NodeType.WEBHOOK} iconSrc={NODE_CONFIGS[NodeType.WEBHOOK].iconSrc} label="Webhook" colorClass="bg-teal-500" />
+            <SidebarItem type={NodeType.WEBHOOK} iconSrc={NODE_CONFIGS[NodeType.WEBHOOK].iconSrc} label="Webhook" />
           )}
           {(!searchTerm || matches('YouTube')) && (
-            <SidebarItem type={NodeType.YOUTUBE} iconSrc={NODE_CONFIGS[NodeType.YOUTUBE].iconSrc} label="YouTube" colorClass="bg-rose-500" />
+            <SidebarItem type={NodeType.YOUTUBE} iconSrc={NODE_CONFIGS[NodeType.YOUTUBE].iconSrc} label="YouTube" />
           )}
             {(!searchTerm || matches('Microsoft Teams')) && (
-              <SidebarItem type={NodeType.TEAMS} iconSrc={NODE_CONFIGS[NodeType.TEAMS].iconSrc} label="Microsoft Teams" colorClass="bg-indigo-500" />
+              <SidebarItem type={NodeType.TEAMS} iconSrc={NODE_CONFIGS[NodeType.TEAMS].iconSrc} label="Microsoft Teams" />
             )}
             {(!searchTerm || matches('Outlook')) && (
-              <SidebarItem type={NodeType.OUTLOOK} iconSrc={NODE_CONFIGS[NodeType.OUTLOOK].iconSrc} label="Outlook" colorClass="bg-blue-500" />
+              <SidebarItem type={NodeType.OUTLOOK} iconSrc={NODE_CONFIGS[NodeType.OUTLOOK].iconSrc} label="Outlook" />
             )}
           </Collapsible>
         </div>
@@ -175,19 +178,19 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={inputsOpen}>
             {(!searchTerm || matches('User Prompt')) && (
-              <SidebarItem type={NodeType.PROMPT_INPUT} icon={Type} label="User Prompt" colorClass="bg-blue-500"/>
+              <SidebarItem type={NodeType.PROMPT_INPUT} icon={Type} label="User Prompt"/>
             )}
             {(!searchTerm || matches('Upload Image')) && (
-              <SidebarItem type={NodeType.IMAGE_UPLOAD} icon={Upload} label="Upload Image" colorClass="bg-slate-500"/>
+              <SidebarItem type={NodeType.IMAGE_UPLOAD} icon={Upload} label="Upload Image"/>
             )}
             {(!searchTerm || matches('Upload Video')) && (
-              <SidebarItem type={NodeType.VIDEO_UPLOAD} icon={Video} label="Upload Video" colorClass="bg-slate-500"/>
+              <SidebarItem type={NodeType.VIDEO_UPLOAD} icon={Video} label="Upload Video"/>
             )}
             {(!searchTerm || matches('Upload XML')) && (
-              <SidebarItem type={NodeType.XML_UPLOAD} icon={FileCode} label="Upload XML" colorClass="bg-slate-500"/>
+              <SidebarItem type={NodeType.XML_UPLOAD} icon={FileCode} label="Upload XML"/>
             )}
             {(!searchTerm || matches('Upload PDF')) && (
-              <SidebarItem type={NodeType.PDF_UPLOAD} icon={FileText} label="Upload PDF" colorClass="bg-slate-500"/>
+              <SidebarItem type={NodeType.PDF_UPLOAD} icon={FileText} label="Upload PDF"/>
             )}
           </Collapsible>
         </div>
@@ -202,16 +205,16 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={textOpen}>
           {(!searchTerm || matches('Gemini 3 Pro')) && (
-            <SidebarItem type={NodeType.GEMINI_3_PRO} iconSrc={NODE_CONFIGS[NodeType.GEMINI_3_PRO].iconSrc} label="Gemini 3 Pro" colorClass="bg-indigo-500" />
+            <SidebarItem type={NodeType.GEMINI_3_PRO} iconSrc={NODE_CONFIGS[NodeType.GEMINI_3_PRO].iconSrc} label="Gemini 3 Pro" />
           )}
             {(!searchTerm || matches('Gemini 2.5 Flash')) && (
-              <SidebarItem type={NodeType.GEMINI_2_5_FLASH} iconSrc={NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH].iconSrc} label="Gemini 2.5 Flash" colorClass="bg-cyan-500" />
+              <SidebarItem type={NodeType.GEMINI_2_5_FLASH} iconSrc={NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH].iconSrc} label="Gemini 2.5 Flash" />
             )}
             {(!searchTerm || matches('Gemini Flash Lite')) && (
-              <SidebarItem type={NodeType.GEMINI_FLASH_LITE} iconSrc={NODE_CONFIGS[NodeType.GEMINI_FLASH_LITE].iconSrc} label="Gemini Flash Lite" colorClass="bg-teal-500" />
+              <SidebarItem type={NodeType.GEMINI_FLASH_LITE} iconSrc={NODE_CONFIGS[NodeType.GEMINI_FLASH_LITE].iconSrc} label="Gemini Flash Lite" />
             )}
             {(!searchTerm || matches('Prompt Expert')) && (
-              <SidebarItem type={NodeType.PROMPT_ENHANCER} iconSrc={NODE_CONFIGS[NodeType.PROMPT_ENHANCER].iconSrc} label="Prompt Expert" colorClass="bg-purple-500" />
+              <SidebarItem type={NodeType.PROMPT_ENHANCER} iconSrc={NODE_CONFIGS[NodeType.PROMPT_ENHANCER].iconSrc} label="Prompt Expert" />
             )}
           </Collapsible>
         </div>
@@ -226,10 +229,10 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={imageOpen}>
             {(!searchTerm || matches('Nano Banana')) && (
-              <SidebarItem type={NodeType.NANO_BANANA} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA].iconSrc} label="Nano Banana" colorClass="bg-amber-500" />
+              <SidebarItem type={NodeType.NANO_BANANA} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA].iconSrc} label="Nano Banana" />
             )}
             {(!searchTerm || matches('Nano Banana Pro')) && (
-              <SidebarItem type={NodeType.NANO_BANANA_PRO} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA_PRO].iconSrc} label="Nano Banana Pro" colorClass="bg-rose-500" />
+              <SidebarItem type={NodeType.NANO_BANANA_PRO} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA_PRO].iconSrc} label="Nano Banana Pro" />
             )}
           </Collapsible>
         </div>
@@ -244,25 +247,25 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={agentsOpen}>
           {(!searchTerm || matches('Claude AI')) && (
-            <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={NODE_CONFIGS[NodeType.CLAUDE_AGENT].iconSrc} label="Claude AI" colorClass="bg-slate-500" />
+            <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={NODE_CONFIGS[NodeType.CLAUDE_AGENT].iconSrc} label="Claude AI" />
           )}
           {(!searchTerm || matches('Deepseek')) && (
-            <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={NODE_CONFIGS[NodeType.DEEPSEEK_AGENT].iconSrc} label="Deepseek" colorClass="bg-slate-500" />
+            <SidebarItem type={NodeType.DEEPSEEK_AGENT} iconSrc={NODE_CONFIGS[NodeType.DEEPSEEK_AGENT].iconSrc} label="Deepseek" />
           )}
           {(!searchTerm || matches('OpenAI')) && (
-            <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={NODE_CONFIGS[NodeType.OPENAI_AGENT].iconSrc} label="OpenAI" colorClass="bg-slate-500" />
+            <SidebarItem type={NodeType.OPENAI_AGENT} iconSrc={NODE_CONFIGS[NodeType.OPENAI_AGENT].iconSrc} label="OpenAI" />
           )}
           {(!searchTerm || matches('Mistral AI')) && (
-            <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={NODE_CONFIGS[NodeType.MISTRAL_AGENT].iconSrc} label="Mistral AI" colorClass="bg-slate-500" />
+            <SidebarItem type={NodeType.MISTRAL_AGENT} iconSrc={NODE_CONFIGS[NodeType.MISTRAL_AGENT].iconSrc} label="Mistral AI" />
           )}
           {(!searchTerm || matches('Hugging Face')) && (
-            <SidebarItem type={NodeType.HUGGING_FACE_AGENT} iconSrc={NODE_CONFIGS[NodeType.HUGGING_FACE_AGENT].iconSrc} label="Hugging Face" colorClass="bg-amber-500" />
+            <SidebarItem type={NodeType.HUGGING_FACE_AGENT} iconSrc={NODE_CONFIGS[NodeType.HUGGING_FACE_AGENT].iconSrc} label="Hugging Face" />
           )}
           {(!searchTerm || matches('Kimi')) && (
-            <SidebarItem type={NodeType.KIMI_AGENT} iconSrc={NODE_CONFIGS[NodeType.KIMI_AGENT].iconSrc} label="Kimi" colorClass="bg-cyan-500" />
+            <SidebarItem type={NodeType.KIMI_AGENT} iconSrc={NODE_CONFIGS[NodeType.KIMI_AGENT].iconSrc} label="Kimi" />
           )}
           {(!searchTerm || matches('Grok')) && (
-            <SidebarItem type={NodeType.GROK_AGENT} iconSrc={NODE_CONFIGS[NodeType.GROK_AGENT].iconSrc} label="Grok" colorClass="bg-indigo-500" />
+            <SidebarItem type={NodeType.GROK_AGENT} iconSrc={NODE_CONFIGS[NodeType.GROK_AGENT].iconSrc} label="Grok" />
           )}
           </Collapsible>
         </div>
@@ -277,31 +280,31 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={integrationsOpen}>
           {(!searchTerm || matches('Supabase')) && (
-            <SidebarItem type={NodeType.SUPABASE} iconSrc={NODE_CONFIGS[NodeType.SUPABASE].iconSrc} label="Supabase" colorClass="bg-green-500" />
+            <SidebarItem type={NodeType.SUPABASE} iconSrc={NODE_CONFIGS[NodeType.SUPABASE].iconSrc} label="Supabase" />
           )}
           {(!searchTerm || matches('Redis')) && (
-            <SidebarItem type={NodeType.REDIS} iconSrc={NODE_CONFIGS[NodeType.REDIS].iconSrc} label="Redis" colorClass="bg-rose-500" />
+            <SidebarItem type={NodeType.REDIS} iconSrc={NODE_CONFIGS[NodeType.REDIS].iconSrc} label="Redis" />
           )}
           {(!searchTerm || matches('Upstash')) && (
-            <SidebarItem type={NodeType.UPSTASH} iconSrc={NODE_CONFIGS[NodeType.UPSTASH].iconSrc} label="Upstash" colorClass="bg-emerald-500" />
+            <SidebarItem type={NodeType.UPSTASH} iconSrc={NODE_CONFIGS[NodeType.UPSTASH].iconSrc} label="Upstash" />
           )}
           {(!searchTerm || matches('PostgreSQL')) && (
-            <SidebarItem type={NodeType.POSTGRESQL} iconSrc={NODE_CONFIGS[NodeType.POSTGRESQL].iconSrc} label="PostgreSQL" colorClass="bg-blue-500" />
+            <SidebarItem type={NodeType.POSTGRESQL} iconSrc={NODE_CONFIGS[NodeType.POSTGRESQL].iconSrc} label="PostgreSQL" />
           )}
           {(!searchTerm || matches('TypeORM')) && (
-            <SidebarItem type={NodeType.TYPEORM} iconSrc={NODE_CONFIGS[NodeType.TYPEORM].iconSrc} label="TypeORM" colorClass="bg-orange-500" />
+            <SidebarItem type={NodeType.TYPEORM} iconSrc={NODE_CONFIGS[NodeType.TYPEORM].iconSrc} label="TypeORM" />
           )}
           {(!searchTerm || matches('Neon')) && (
-            <SidebarItem type={NodeType.NEON} iconSrc={NODE_CONFIGS[NodeType.NEON].iconSrc} label="Neon" colorClass="bg-cyan-500" />
+            <SidebarItem type={NodeType.NEON} iconSrc={NODE_CONFIGS[NodeType.NEON].iconSrc} label="Neon" />
           )}
           {(!searchTerm || matches('SQL Server')) && (
-            <SidebarItem type={NodeType.SQL_SERVER} iconSrc={NODE_CONFIGS[NodeType.SQL_SERVER].iconSrc} label="SQL Server" colorClass="bg-rose-500" />
+            <SidebarItem type={NodeType.SQL_SERVER} iconSrc={NODE_CONFIGS[NodeType.SQL_SERVER].iconSrc} label="SQL Server" />
           )}
             {(!searchTerm || matches('Microsoft Excel')) && (
-              <SidebarItem type={NodeType.EXCEL} iconSrc={NODE_CONFIGS[NodeType.EXCEL].iconSrc} label="Microsoft Excel" colorClass="bg-green-500" />
+              <SidebarItem type={NodeType.EXCEL} iconSrc={NODE_CONFIGS[NodeType.EXCEL].iconSrc} label="Microsoft Excel" />
             )}
             {(!searchTerm || matches('Microsoft Word')) && (
-              <SidebarItem type={NodeType.WORD} iconSrc={NODE_CONFIGS[NodeType.WORD].iconSrc} label="Microsoft Word" colorClass="bg-blue-500" />
+              <SidebarItem type={NodeType.WORD} iconSrc={NODE_CONFIGS[NodeType.WORD].iconSrc} label="Microsoft Word" />
             )}
           </Collapsible>
         </div>
@@ -316,13 +319,13 @@ export const Sidebar = () => {
           </div>
           <Collapsible open={outputsOpen}>
             {(!searchTerm || matches('Image Viewer')) && (
-              <SidebarItem type={NodeType.IMAGE_DISPLAY} icon={Eye} label="Image Viewer" colorClass="bg-emerald-500" />
+              <SidebarItem type={NodeType.IMAGE_DISPLAY} icon={Eye} label="Image Viewer" />
             )}
             {(!searchTerm || matches('Video Viewer')) && (
-              <SidebarItem type={NodeType.VIDEO_DISPLAY} icon={Video} label="Video Viewer" colorClass="bg-emerald-500" />
+              <SidebarItem type={NodeType.VIDEO_DISPLAY} icon={Video} label="Video Viewer" />
             )}
             {(!searchTerm || matches('Message Output')) && (
-              <SidebarItem type={NodeType.MESSAGE_OUTPUT} icon={Type} label="Message Output" colorClass="bg-emerald-500" />
+              <SidebarItem type={NodeType.MESSAGE_OUTPUT} icon={Type} label="Message Output" />
             )}
           </Collapsible>
         </div>

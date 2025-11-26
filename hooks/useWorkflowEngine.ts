@@ -2,13 +2,17 @@
 import { useState, useCallback } from 'react';
 import { useReactFlow } from 'reactflow';
 import { NodeType } from '../types';
-import { generateText, generateImage } from '../services/geminiService';
 import { NODE_CONFIGS } from '../config';
+import { createContainer } from '../core/di/container';
 
+/**
+ * Executor de workflows com injeção de dependências e baixa acoplamento.
+ */
 export function useWorkflowEngine() {
   const { getNodes, getEdges, setNodes } = useReactFlow();
   const [isRunning, setIsRunning] = useState(false);
   const [authError, setAuthError] = useState(false);
+  const deps = createContainer();
 
   // Helper para atualizar dados de um nó específico
   const updateNodeStatus = useCallback((id: string, partialData: any) => {
@@ -26,80 +30,7 @@ export function useWorkflowEngine() {
     );
   }, [setNodes]);
 
-  const buildSupabaseRequest = (
-    baseUrl: string,
-    apiKey: string,
-    table: string,
-    op: string,
-    payloadObj: any,
-    prevPayload: any
-  ) => {
-    const root = `${baseUrl.replace(/\/$/, '')}/rest/v1/${table}`;
-    const headers: Record<string, string> = { apikey: apiKey, Authorization: `Bearer ${apiKey}` };
-    let method = 'GET';
-    let body: any = undefined;
-    let url = root;
-    const qs: string[] = [];
-
-    const encode = (v: any) => encodeURIComponent(String(v));
-    const applyFilters = (where: any) => {
-      if (!where || typeof where !== 'object') return;
-      for (const key of Object.keys(where)) {
-        const val = where[key];
-        if (val === null || typeof val !== 'object' || Array.isArray(val)) {
-          if (Array.isArray(val)) {
-            qs.push(`${key}=in.(${val.map((x) => encode(x)).join(',')})`);
-          } else {
-            qs.push(`${key}=eq.${encode(val)}`);
-          }
-          continue;
-        }
-        const ops = ['eq','neq','gt','gte','lt','lte','like','ilike','is','in'];
-        const opKey = ops.find((o) => val[o] !== undefined);
-        if (opKey) {
-          if (opKey === 'in' && Array.isArray(val[opKey])) {
-            qs.push(`${key}=in.(${val[opKey].map((x: any) => encode(x)).join(',')})`);
-          } else {
-            qs.push(`${key}=${opKey}.${encode(val[opKey])}`);
-          }
-        }
-      }
-    };
-
-    if (op === 'select') {
-      const columns = Array.isArray(payloadObj?.columns) ? payloadObj.columns.join(',') : (payloadObj?.select || '*');
-      qs.push(`select=${columns}`);
-      applyFilters(payloadObj?.where);
-      if (payloadObj?.order && payloadObj.order.column) {
-        const col = payloadObj.order.column;
-        const dir = payloadObj.order.desc ? 'desc' : 'asc';
-        qs.push(`order=${col}.${dir}`);
-      }
-      if (payloadObj?.limit) qs.push(`limit=${Number(payloadObj.limit) || 0}`);
-      headers['Prefer'] = 'return=representation';
-      if (payloadObj?.range && payloadObj.range.from !== undefined && payloadObj.range.to !== undefined) {
-        headers['Range'] = `${Number(payloadObj.range.from)}-${Number(payloadObj.range.to)}`;
-      }
-    } else if (op === 'insert') {
-      method = 'POST';
-      headers['Content-Type'] = 'application/json';
-      headers['Prefer'] = 'return=representation';
-      body = payloadObj?.values !== undefined ? payloadObj.values : prevPayload;
-    } else if (op === 'update') {
-      method = 'PATCH';
-      headers['Content-Type'] = 'application/json';
-      headers['Prefer'] = 'return=representation';
-      body = payloadObj?.set !== undefined ? payloadObj.set : prevPayload;
-      applyFilters(payloadObj?.where);
-    } else if (op === 'delete') {
-      method = 'DELETE';
-      headers['Prefer'] = 'return=minimal';
-      applyFilters(payloadObj?.where);
-    }
-
-    if (qs.length) url = `${root}?${qs.join('&')}`;
-    return { url, method, headers, body: body ? JSON.stringify(body) : undefined };
-  };
+  // Supabase moved to service; Redis moved to service; Text/Image moved to services
 
   const processNodeChildren = async (sourceId: string, payload: any, graphEdges?: ReturnType<typeof getEdges>, nodeMap?: Map<string, any>, visited?: Set<string>) => {
     const edges = graphEdges || getEdges();
@@ -167,7 +98,9 @@ export function useWorkflowEngine() {
           updateNodeStatus(sourceNode.id, { status: 'completed', value: String(payload ?? '') });
         }
       }
-    } catch {}
+    } catch (e) {
+      deps.logger.debug('Flow control preprocessing error', e);
+    }
     
       for (const edge of outgoingEdges) {
       const targetNode = nodeMap ? nodeMap.get(edge.target) : nodes.find(n => n.id === edge.target);
@@ -190,7 +123,7 @@ export function useWorkflowEngine() {
           const modelToUse = targetNode.data.model || cfg?.defaultModel || targetNode.type;
           const systemInstruction = targetNode.data.systemMessage;
 
-          result = await generateText(payload, modelToUse, { systemInstruction });
+          result = await deps.text.generate(payload, modelToUse, { systemInstruction });
           updateNodeStatus(targetNode.id, { status: 'completed', value: result });
         } 
         else if (
@@ -231,9 +164,9 @@ export function useWorkflowEngine() {
           updateNodeStatus(targetNode.id, { status: 'running' });
           
           const imgCfg = NODE_CONFIGS[targetNode.type as keyof typeof NODE_CONFIGS];
-          let modelId = imgCfg?.modelName || (targetNode.type === NodeType.NANO_BANANA_PRO ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image');
+          const modelId = imgCfg?.modelName || (targetNode.type === NodeType.NANO_BANANA_PRO ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image');
 
-          result = await generateImage(payload, modelId, { aspectRatio, resolution });
+          result = await deps.image.generate(payload, modelId, { aspectRatio, resolution });
           updateNodeStatus(targetNode.id, { status: 'completed', value: result, imageUrl: result });
         } 
         else if (targetNode.type === NodeType.REDIS) {
@@ -247,14 +180,7 @@ export function useWorkflowEngine() {
             continue;
           }
           updateNodeStatus(targetNode.id, { status: 'running' });
-          const body: any = { command: action, args: action === 'SET' ? [key, value] : [key] };
-          const resp = await fetch(host, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify(body)
-          });
-          const json = await resp.json().catch(() => ({}));
-          result = json?.result ?? json ?? null;
+          result = await deps.redis.execute(host, token, action, key, value);
           updateNodeStatus(targetNode.id, { status: 'completed', value: typeof result === 'string' ? result : JSON.stringify(result) });
         }
         else if (targetNode.type === NodeType.SUPABASE) {
@@ -270,10 +196,8 @@ export function useWorkflowEngine() {
           updateNodeStatus(targetNode.id, { status: 'running' });
           let payloadObj: any = {};
           try { payloadObj = payloadStr ? JSON.parse(payloadStr) : {}; } catch { payloadObj = {}; }
-          const req = buildSupabaseRequest(baseUrl, apiKey, table, op, payloadObj, payload);
-          const resp = await fetch(req.url, { method: req.method, headers: req.headers, body: req.body });
-          const text = await resp.text();
-          try { result = JSON.parse(text); } catch { result = text; }
+          const req = deps.supabase.buildRequest(baseUrl, apiKey, table, op, payloadObj, payload);
+          result = await deps.supabase.execute(req);
           updateNodeStatus(targetNode.id, { status: 'completed', value: typeof result === 'string' ? result : JSON.stringify(result) });
         }
         else if (
@@ -308,6 +232,9 @@ export function useWorkflowEngine() {
     }
   };
 
+  /**
+   * Dispara a execução do workflow corrente.
+   */
   const runWorkflow = async () => {
     setIsRunning(true);
     setAuthError(false);
@@ -386,7 +313,7 @@ export function useWorkflowEngine() {
       }
 
     } catch (error: any) {
-      console.error("Workflow Execution Error:", error);
+      deps.logger.error("Workflow Execution Error:", error);
       
       const errorMsg = (error.message || JSON.stringify(error)).toLowerCase();
       

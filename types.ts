@@ -1,6 +1,7 @@
 
 
 export enum NodeType {
+  START = 'start',
   PROMPT_INPUT = 'promptInput',
   IMAGE_UPLOAD = 'imageUpload',
   VIDEO_UPLOAD = 'videoUpload',
@@ -8,10 +9,7 @@ export enum NodeType {
   PDF_UPLOAD = 'pdfUpload',
   MESSAGE_OUTPUT = 'messageOutput',
   // Text/LLM Models
-  GEMINI_3_PRO = 'gemini3Pro',          // gemini-3-pro-preview
-  GEMINI_2_5_FLASH = 'geminiFlash',     // gemini-2.5-flash
-  GEMINI_FLASH_LITE = 'geminiFlashLite',// gemini-flash-lite-latest
-  PROMPT_ENHANCER = 'promptEnhancer',   // Legacy alias for Flash with specific system prompt
+  GEMINI_AGENT = 'geminiAgent',
   CLAUDE_AGENT = 'claudeAgent',
   DEEPSEEK_AGENT = 'deepseekAgent',
   OPENAI_AGENT = 'openaiAgent',
@@ -86,6 +84,11 @@ export interface NodeData {
   provider?: string;
   systemMessage?: string;
   apiKey?: string;
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+  cacheEnabled?: boolean;
+  history?: Array<{ prompt: string; model: string; result: string; ts: number }>;
 
   // Redis Configurations
   redisHost?: string;
@@ -109,6 +112,37 @@ export interface NodeData {
   webhookSecret?: string;
   webhookContentType?: string;
   webhookPayload?: string;
+
+  gmailOperation?: 'send' | 'read' | 'search';
+  gmailClientId?: string;
+  gmailRedirectUri?: string;
+  gmailScope?: string;
+  gmailAccessToken?: string;
+  gmailTokenType?: string;
+  gmailTokenExpiry?: number;
+  gmailIsLoading?: boolean;
+  gmailError?: string;
+  gmailStatus?: string;
+  gmailTo?: string;
+  gmailSubject?: string;
+  gmailBody?: string;
+  gmailIsHtml?: boolean;
+  gmailAttachments?: Array<{ name: string; type: string; data: string }>;
+  gmailLabel?: string;
+  gmailFrom?: string;
+  gmailStartDate?: string;
+  gmailEndDate?: string;
+  gmailPageToken?: string;
+  gmailMessages?: Array<{ id: string; snippet: string }>; 
+  gmailSelectedMessage?: any;
+  gmailQuery?: string;
+  whatsPhone?: string;
+  whatsApiKey?: string;
+  whatsEndpoint?: string;
+  whatsProxyUrl?: string;
+  whatsError?: string;
+  whatsStatus?: string;
+  onTestConnection?: () => Promise<void> | void;
 }
 
 export interface PipelineStepResult {

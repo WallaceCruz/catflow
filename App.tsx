@@ -1,4 +1,5 @@
-import React, { useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useCallback, useRef, useEffect, useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import ReactFlow, {
   Background,
   Controls,
@@ -8,10 +9,15 @@ import ReactFlow, {
   BackgroundVariant,
   useReactFlow,
   Node,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  EdgeProps,
 } from 'reactflow';
+import 'reactflow/dist/style.css';
 
 import { NodeType } from './types';
-import { PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode } from './components/CustomNodes';
+import { StartNode, PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -29,15 +35,13 @@ import { useUI } from './hooks/useUI';
 
 // --- Configuration ---
 const nodeTypes = {
+  [NodeType.START]: StartNode,
   [NodeType.PROMPT_INPUT]: PromptInputNode,
   [NodeType.IMAGE_UPLOAD]: ImageUploadNode,
   [NodeType.VIDEO_UPLOAD]: VideoUploadNode,
   [NodeType.XML_UPLOAD]: XmlUploadNode,
   [NodeType.PDF_UPLOAD]: PdfUploadNode,
-  [NodeType.GEMINI_3_PRO]: TextGenNode,
-  [NodeType.GEMINI_2_5_FLASH]: TextGenNode,
-  [NodeType.GEMINI_FLASH_LITE]: TextGenNode,
-  [NodeType.PROMPT_ENHANCER]: TextGenNode,
+  [NodeType.GEMINI_AGENT]: TextGenNode,
   [NodeType.CLAUDE_AGENT]: TextGenNode,
   [NodeType.DEEPSEEK_AGENT]: TextGenNode,
   [NodeType.OPENAI_AGENT]: TextGenNode,
@@ -75,6 +79,75 @@ const nodeTypes = {
   [NodeType.MERGE]: MergeNode,
 };
 
+const RemovableEdge: React.FC<EdgeProps> = (props) => {
+  const { setEdges } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const hideTimer = useRef<number | null>(null);
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    targetX: props.targetX,
+    targetY: props.targetY,
+    sourcePosition: props.sourcePosition,
+    targetPosition: props.targetPosition,
+  });
+  const remove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEdges((eds) => eds.filter((edge) => edge.id !== props.id));
+  };
+  const show = () => {
+    if (hideTimer.current) {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+    setHovered(true);
+  };
+  const hideDelayed = () => {
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setHovered(false), 120);
+  };
+  return (
+    <>
+      <BaseEdge id={props.id} path={edgePath} markerEnd={props.markerEnd} style={props.style} />
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="rgba(0,0,0,0)"
+        strokeWidth={16}
+        style={{ pointerEvents: 'stroke' }}
+        onMouseEnter={show}
+        onMouseLeave={hideDelayed}
+      />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(${labelX}px, ${labelY}px) translate(-50%, -50%)`,
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            pointerEvents: hovered ? 'all' : 'none',
+            opacity: hovered ? 1 : 0,
+            transition: 'opacity 120ms ease-out'
+          }}
+        >
+          <button
+            className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+            onClick={remove}
+            title="Remover"
+            onMouseEnter={show}
+            onMouseLeave={hideDelayed}
+            onTouchStart={show}
+          >
+            <X size={12} strokeWidth={3} />
+          </button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
+const edgeTypes = { removable: RemovableEdge } as const;
+
  
 
 const initialNodesData: Node[] = [
@@ -98,7 +171,7 @@ function FlowContent() {
   const { isDarkMode } = useTheme();
 
   const edgeOptions = useMemo(() => ({
-    type: 'default',
+    type: 'removable',
     animated: true,
     style: { stroke: isDarkMode ? '#60a5fa' : '#6366f1', strokeWidth: 3 },
   }), [isDarkMode]);
@@ -175,6 +248,11 @@ function FlowContent() {
         newNode.data.waitMs = 1000;
         newNode.data.waitUnit = 'ms';
       }
+      if (type === NodeType.START) {
+        // Nó inicial não requer input; metadados serão gerados na execução
+        newNode.data.executionId = '';
+        newNode.data.activatedAt = '';
+      }
 
       setNodes((nds) => nds.concat(newNode));
     },
@@ -204,7 +282,19 @@ function FlowContent() {
   const onSave = useCallback(() => {
     try {
       const flow = toObject();
-      localStorage.setItem('flowgen-state', JSON.stringify(flow));
+      const sanitized = {
+        ...flow,
+        nodes: (flow.nodes || []).map((n: any) => {
+          if (n.type === NodeType.WHATSAPP) {
+            return { ...n, data: { ...n.data, whatsApiKey: undefined } };
+          }
+          if (n.type === NodeType.GMAIL) {
+            return { ...n, data: { ...n.data, gmailAccessToken: undefined } };
+          }
+          return n;
+        })
+      };
+      localStorage.setItem('flowgen-state', JSON.stringify(sanitized));
       alert('Workflow salvo com sucesso!');
     } catch {}
   }, [toObject]);
@@ -212,7 +302,19 @@ function FlowContent() {
   const onShare = useCallback(() => {
     try {
       const flow = toObject();
-      const encoded = encodeURIComponent(btoa(JSON.stringify(flow)));
+      const sanitized = {
+        ...flow,
+        nodes: (flow.nodes || []).map((n: any) => {
+          if (n.type === NodeType.WHATSAPP) {
+            return { ...n, data: { ...n.data, whatsApiKey: undefined } };
+          }
+          if (n.type === NodeType.GMAIL) {
+            return { ...n, data: { ...n.data, gmailAccessToken: undefined } };
+          }
+          return n;
+        })
+      };
+      const encoded = encodeURIComponent(btoa(JSON.stringify(sanitized)));
       const url = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
       if ((navigator as any).share) {
         (navigator as any).share({ title: 'FlowGen AI', text: 'Veja meu workflow', url });
@@ -222,6 +324,28 @@ function FlowContent() {
       }
     } catch {
       alert('Falha ao gerar link de compartilhamento');
+    }
+  }, [toObject]);
+
+  const onDeploy = useCallback(() => {
+    try {
+      const flow = toObject();
+      const sanitized = {
+        ...flow,
+        nodes: (flow.nodes || []).map((n: any) => {
+          if (n.type === NodeType.WHATSAPP) {
+            return { ...n, data: { ...n.data, whatsApiKey: undefined } };
+          }
+          if (n.type === NodeType.GMAIL) {
+            return { ...n, data: { ...n.data, gmailAccessToken: undefined } };
+          }
+          return n;
+        })
+      };
+      console.log('[Deploy] Workflow pronto para deploy', sanitized);
+      alert('Deploy iniciado!');
+    } catch {
+      alert('Falha ao iniciar deploy');
     }
   }, [toObject]);
 
@@ -282,7 +406,7 @@ function FlowContent() {
       <div className="flex-1 h-full relative ml-80" ref={reactFlowWrapper}>
         <Header 
           onUndo={undo} onRedo={redo} canUndo={past.length > 0} canRedo={future.length > 0}
-          onSelectKey={handleSelectKey} onClear={requestClear} onSave={onSave} onShare={onShare} onRun={runWorkflow} isRunning={isRunning}
+          onSelectKey={handleSelectKey} onClear={requestClear} onSave={onSave} onShare={onShare} onRun={runWorkflow} isRunning={isRunning} onDeploy={onDeploy}
         />
 
         <ReactFlow
@@ -295,6 +419,7 @@ function FlowContent() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           defaultEdgeOptions={edgeOptions}
           fitView
           proOptions={{ hideAttribution: true }}

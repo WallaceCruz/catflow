@@ -1,7 +1,7 @@
 
 
 import { NodeType } from './types';
-import { Bot, Brain, ZapIcon, Feather, Sparkles, Star, Upload, Video, Type, Server, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
+import { Brain, Sparkles, Star, Upload, Video, Type, Server, GitBranch, Code2, Filter, Timer, FileText, FileCode, Play } from 'lucide-react';
 
 export const NODE_COLORS = {
   blue: 'bg-blue-500 border-blue-500',
@@ -178,6 +178,7 @@ export const PROVIDERS = [
 ];
 
 export const AGENT_PROVIDER_MAP: Record<string, string> = {
+  [NodeType.GEMINI_AGENT]: 'google',
   [NodeType.CLAUDE_AGENT]: 'anthropic',
   [NodeType.DEEPSEEK_AGENT]: 'deepseek',
   [NodeType.OPENAI_AGENT]: 'openai',
@@ -197,40 +198,17 @@ export interface NodeConfig {
   desc?: string;
   iconSrc?: string;
   brandHex?: string;
+  brandHeaderHex?: string;
 }
 
 export const NODE_CONFIGS: Record<string, NodeConfig> = {
-  [NodeType.GEMINI_3_PRO]: { 
-    title: "Gemini 3 Pro", 
-    icon: Brain, 
-    color: "indigo", 
-    defaultModel: "gemini-3-pro-preview",
-    tooltip: "Modelo avançado com alta capacidade de raciocínio. Ideal para prompts complexos e lógica.",
-    iconSrc: GEMINI_LOGO
-  },
-  [NodeType.GEMINI_2_5_FLASH]: { 
-    title: "Gemini Flash", 
-    icon: ZapIcon, 
-    color: "cyan", 
-    defaultModel: "gemini-2.5-flash",
-    tooltip: "Modelo rápido e versátil. Ótimo para tarefas gerais e refinamento de prompts.",
-    iconSrc: GEMINI_LOGO
-  },
-  [NodeType.GEMINI_FLASH_LITE]: { 
-    title: "Gemini Lite", 
-    icon: Feather, 
-    color: "teal", 
-    defaultModel: "gemini-flash-lite-latest",
-    tooltip: "Modelo leve e econômico. Perfeito para tarefas simples e rápidas.",
-    iconSrc: GEMINI_LOGO
-  },
-  [NodeType.PROMPT_ENHANCER]: { 
-    title: "Prompt Specialist", 
-    icon: Bot, 
-    color: "purple", 
-    defaultModel: "gemini-2.5-flash",
-    tooltip: "Especialista em melhorar prompts para geração de imagens mais detalhadas.",
-    iconSrc: GEMINI_LOGO
+  [NodeType.START]: {
+    title: "Início do Processo",
+    icon: Play,
+    color: "green",
+    tooltip: "Nó inicial do fluxo. Define dados iniciais e inicia a execução.",
+    brandHex: '#10b981',
+    brandHeaderHex: '#ecfdf5'
   },
   [NodeType.IMAGE_UPLOAD]: {
     title: "Image Upload",
@@ -287,6 +265,16 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     iconSrc: GEMINI_LOGO
   }
   ,
+  [NodeType.GEMINI_AGENT]: {
+    title: "Gemini Agent",
+    icon: Brain,
+    color: "indigo",
+    tooltip: "Agente de texto usando Gemini. Configuração de API, modelo e parâmetros.",
+    iconSrc: GEMINI_LOGO,
+    defaultModel: 'gemini-2.5-flash',
+    brandHex: '#4285F4',
+    brandHeaderHex: '#eaf1ff'
+  },
   [NodeType.CLAUDE_AGENT]: {
     title: "Claude Agent",
     icon: Brain,
@@ -294,7 +282,8 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     tooltip: "Agente de texto usando Claude.",
     iconSrc: CLAUDE_LOGO,
     defaultModel: 'claude-3-5-sonnet',
-    brandHex: '#C36241'
+    brandHex: '#C36241',
+    brandHeaderHex: '#f9efec'
   },
   [NodeType.DEEPSEEK_AGENT]: {
     title: "Deepseek Agent",
@@ -303,7 +292,8 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     tooltip: "Agente de texto usando Deepseek.",
     iconSrc: DEEPSEEK_LOGO,
     defaultModel: 'deepseek-chat',
-    brandHex: '#4F46E5'
+    brandHex: '#4C6CFA',
+    brandHeaderHex: '#edf0ff'
   },
   [NodeType.OPENAI_AGENT]: {
     title: "OpenAI Agent",
@@ -363,7 +353,9 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     icon: Server,
     color: "green",
     tooltip: "Banco de dados e APIs Supabase. Configure URL, chave e tabela.",
-    iconSrc: SUPABASE_LOGO
+    iconSrc: SUPABASE_LOGO,
+    brandHex: '#16A249',
+    brandHeaderHex: '#e7f5ec'
   }
   ,
   [NodeType.POSTGRESQL]: {
@@ -430,7 +422,8 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     color: "green",
     tooltip: "Comunicação via WhatsApp.",
     iconSrc: WHATSAPP_LOGO,
-    brandHex: '#25D366'
+    brandHex: '#25D366',
+    brandHeaderHex: '#e9fbef'
   },
   [NodeType.DISCORD]: {
     title: "Discord",

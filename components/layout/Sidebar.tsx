@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Layout, Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
+import { Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
 import { NodeType } from '../../types';
 import { NODE_CONFIGS } from '../../config';
 import { useUI } from '../../hooks/useUI';
@@ -51,7 +51,6 @@ export const Sidebar = () => {
     searchTerm,
     setSearchTerm,
     inputsOpen,
-    textOpen,
     imageOpen,
     outputsOpen,
     communicationOpen,
@@ -59,7 +58,6 @@ export const Sidebar = () => {
     agentsOpen,
     integrationsOpen,
     toggleInputs,
-    toggleText,
     toggleImage,
     toggleOutputs,
     toggleCommunication,
@@ -71,7 +69,6 @@ export const Sidebar = () => {
   useEffect(() => {
     if (searchTerm) {
       if (!inputsOpen) toggleInputs();
-      if (!textOpen) toggleText();
       if (!imageOpen) toggleImage();
       if (!outputsOpen) toggleOutputs();
       if (!agentsOpen) toggleAgents();
@@ -82,13 +79,12 @@ export const Sidebar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
   const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video', 'Upload XML', 'Upload PDF'].filter(matches).length;
-  const textCount = ['Gemini 3 Pro', 'Gemini 2.5 Flash', 'Gemini Flash Lite', 'Prompt Expert'].filter(matches).length;
   const imageCount = ['Nano Banana', 'Nano Banana Pro'].filter(matches).length;
   const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output'].filter(matches).length;
-  const agentsCount = ['Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI', 'Hugging Face', 'Kimi', 'Grok'].filter(matches).length;
+  const agentsCount = ['Gemini', 'Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI', 'Hugging Face', 'Kimi', 'Grok'].filter(matches).length;
   const integrationsCount = ['Supabase', 'Redis', 'Microsoft Excel', 'Microsoft Word', 'Upstash', 'PostgreSQL', 'TypeORM', 'Neon', 'SQL Server'].filter(matches).length;
   const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube'].filter(matches).length;
-  const flowCount = ['Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
+  const flowCount = ['Start', 'Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-xl z-30 transition-colors duration-300">
       {/* Header */}
@@ -97,14 +93,10 @@ export const Sidebar = () => {
           <Zap size={24} fill="currentColor" />
           <h1 className="font-extrabold text-xl tracking-tight text-slate-800 dark:text-white">FlowGen AI</h1>
         </div>
-        <p className="text-xs font-medium text-slate-400 dark:text-slate-500">Visual Generative Pipeline</p>
+        
       </div>
 
-      {/* Instructions */}
-      <div className="px-6 py-3 bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
-         <Layout size={12} className="text-slate-400 dark:text-slate-500"/>
-         <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">Drag nodes to canvas</span>
-      </div>
+      
       
       {/* Scrollable Container */}
       <div
@@ -132,6 +124,9 @@ export const Sidebar = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{flowCount}</span>
           </div>
           <Collapsible open={flowOpen}>
+            {(!searchTerm || matches('Start')) && (
+              <SidebarItem type={NodeType.START} icon={NODE_CONFIGS[NodeType.START].icon} label="Start" />
+            )}
             {(!searchTerm || matches('Router')) && (
               <SidebarItem type={NodeType.ROUTER} icon={GitBranch} label="Router" />
             )}
@@ -208,29 +203,7 @@ export const Sidebar = () => {
           </Collapsible>
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleText()}>
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-              <ChevronDown size={14} className={`${textOpen ? '' : 'rotate-180'} transition-transform`} />
-              <h3 className="text-[11px] font-bold uppercase tracking-wider">Text Agents</h3>
-            </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{textCount}</span>
-          </div>
-          <Collapsible open={textOpen}>
-          {(!searchTerm || matches('Gemini 3 Pro')) && (
-            <SidebarItem type={NodeType.GEMINI_3_PRO} iconSrc={NODE_CONFIGS[NodeType.GEMINI_3_PRO].iconSrc} label="Gemini 3 Pro" />
-          )}
-            {(!searchTerm || matches('Gemini 2.5 Flash')) && (
-              <SidebarItem type={NodeType.GEMINI_2_5_FLASH} iconSrc={NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH].iconSrc} label="Gemini 2.5 Flash" />
-            )}
-            {(!searchTerm || matches('Gemini Flash Lite')) && (
-              <SidebarItem type={NodeType.GEMINI_FLASH_LITE} iconSrc={NODE_CONFIGS[NodeType.GEMINI_FLASH_LITE].iconSrc} label="Gemini Flash Lite" />
-            )}
-            {(!searchTerm || matches('Prompt Expert')) && (
-              <SidebarItem type={NodeType.PROMPT_ENHANCER} iconSrc={NODE_CONFIGS[NodeType.PROMPT_ENHANCER].iconSrc} label="Prompt Expert" />
-            )}
-          </Collapsible>
-        </div>
+        
 
         <div className="mb-4">
           <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleImage()}>
@@ -259,6 +232,9 @@ export const Sidebar = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{agentsCount}</span>
           </div>
           <Collapsible open={agentsOpen}>
+          {(!searchTerm || matches('Gemini')) && (
+            <SidebarItem type={NodeType.GEMINI_AGENT} iconSrc={NODE_CONFIGS[NodeType.GEMINI_AGENT].iconSrc} label="Gemini" />
+          )}
           {(!searchTerm || matches('Claude AI')) && (
             <SidebarItem type={NodeType.CLAUDE_AGENT} iconSrc={NODE_CONFIGS[NodeType.CLAUDE_AGENT].iconSrc} label="Claude AI" />
           )}

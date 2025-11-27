@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
-import { Undo, Redo, Key, Trash2, Save, Play, Moon, Sun, User, Settings, LogOut, Share2 } from 'lucide-react';
+import { Undo, Redo, Key, Trash2, Save, Play, Moon, Sun, User, Settings, LogOut, Share2, Rocket } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useUI } from '../../hooks/useUI';
 
 interface HeaderProps {
   onUndo: () => void;
@@ -13,6 +14,7 @@ interface HeaderProps {
   onShare: () => void;
   onRun: () => void;
   isRunning: boolean;
+  onDeploy: () => void;
 }
 
 const ThemeToggle = memo(() => {
@@ -51,9 +53,10 @@ const ThemeToggle = memo(() => {
 });
 
 export const Header: React.FC<HeaderProps> = ({
-  onUndo, onRedo, canUndo, canRedo, onSelectKey, onClear, onSave, onShare, onRun, isRunning
+  onUndo, onRedo, canUndo, canRedo, onSelectKey, onClear, onSave, onShare, onRun, isRunning, onDeploy
 }) => {
   const [profileOpen, setProfileOpen] = useState(false);
+  const { showControls, zoomOnScroll, panOnDrag, toggleShowControls, toggleZoomOnScroll, togglePanOnDrag } = useUI();
   useEffect(() => {
     const close = () => setProfileOpen(false);
     if (profileOpen) document.addEventListener('click', close);
@@ -62,6 +65,18 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <div className="absolute top-4 right-4 z-10 flex gap-2">
       <ThemeToggle />
+
+      <div className="flex gap-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-lg px-2 py-1 items-center">
+        <button onClick={toggleShowControls} className={`px-3 py-2 rounded-full text-xs font-semibold transition-colors ${showControls ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`} title="Mostrar/Ocultar Controles">
+          Controls
+        </button>
+        <button onClick={toggleZoomOnScroll} className={`px-3 py-2 rounded-full text-xs font-semibold transition-colors ${zoomOnScroll ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`} title="Zoom com Scroll">
+          Zoom
+        </button>
+        <button onClick={togglePanOnDrag} className={`px-3 py-2 rounded-full text-xs font-semibold transition-colors ${panOnDrag ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`} title="Pan no Drag">
+          Pan
+        </button>
+      </div>
 
       <div className="flex gap-1 mr-4 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-lg px-2 py-1 items-center">
         <button onClick={onUndo} disabled={!canUndo} className={`p-2 rounded-full transition-colors ${!canUndo ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-500'}`} title="Undo (Ctrl+Z)">
@@ -89,7 +104,11 @@ export const Header: React.FC<HeaderProps> = ({
         <Share2 size={18} /><span className="text-sm hidden md:inline">Share</span>
       </button>
 
-      <button onClick={onRun} disabled={isRunning} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold shadow-xl transition-all transform hover:scale-105 active:scale-95 ${isRunning ? 'bg-orange-300 dark:bg-orange-800 cursor-not-allowed text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}>
+      <button onClick={onDeploy} className="flex items-center gap-2 px-4 py-3 rounded-full font-semibold shadow-lg transition-all transform hover:scale-105 active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-[#00C853] dark:hover:bg-[#00B74A]" title="Deploy">
+        <Rocket size={18} /><span className="text-sm hidden md:inline">Deploy</span>
+      </button>
+
+      <button onClick={onRun} disabled={isRunning} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold shadow-xl transition-all transform hover:scale-105 active:scale-95 ${isRunning ? 'bg-orange-300 dark:bg-orange-900 cursor-not-allowed text-white' : 'bg-orange-500 hover:bg-orange-600 text-white dark:bg-[#FF8F00] dark:hover:bg-[#FF6F00]'}`}>
         {isRunning ? <span className="animate-spin mr-2">●</span> : <Play size={20} fill="currentColor" />}
         {isRunning ? 'Executando...' : 'Run Flow'}
       </button>

@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { useReactFlow, Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges, addEdge, Connection } from 'reactflow';
+import { NODE_CONFIGS } from '../config';
 import { useFlowHistoryStore } from '../stores/flowHistoryStore';
 
  
@@ -20,7 +21,7 @@ export function useFlowHistory(
   }));
   
   // Acessamos o estado atual via getNodes/getEdges do ReactFlow para garantir frescor nos snapshots
-  const { getNodes, getEdges } = useReactFlow();
+  const { getNodes, getEdges, getNode } = useReactFlow();
 
   const takeSnapshot = useCallback(() => {
     push({ nodes: getNodes(), edges: getEdges() });
@@ -66,9 +67,12 @@ export function useFlowHistory(
   const onConnect = useCallback(
     (params: Connection) => {
       takeSnapshot();
-      setEdges((eds) => addEdge({ ...params }, eds));
+      const src = params.source ? getNode(params.source) : null;
+      const brandHex = src && src.type ? (NODE_CONFIGS[src.type as string]?.brandHex || undefined) : undefined;
+      const stroke = brandHex || '#6366f1';
+      setEdges((eds) => addEdge({ ...params, animated: true, type: 'removable', style: { stroke, strokeWidth: 4 } }, eds));
     },
-    [takeSnapshot, setEdges]
+    [takeSnapshot, setEdges, getNode]
   );
 
   const onNodeDragStart = useCallback(() => {

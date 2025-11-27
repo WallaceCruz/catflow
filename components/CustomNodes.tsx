@@ -1,11 +1,13 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
-import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy } from 'lucide-react';
+import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy, Play } from 'lucide-react';
 
 import { NodeContainer } from './nodes/NodeContainer';
+import { createWhatsAppClient } from '../services/whatsappService';
+import { pkceCreate, buildAuthUrl, exchangeCode, gmailListMessages, gmailGetMessage, gmailSendMessage } from '../services/gmailService';
 import { StatusBadge, LabelArea } from './nodes/NodeComponents';
 import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, DEEPSEEK_MODELS, MISTRAL_MODELS, AGENT_PROVIDER_MAP, HUGGINGFACE_MODELS, KIMI_MODELS, GROK_MODELS } from '../config';
-import { NodeType } from '../types';
+import { NodeType, NodeData } from '../types';
 
 // 1. Prompt Input Node
 /**
@@ -20,7 +22,7 @@ export const PromptInputNode = memo(({ id, type, data, selected }: NodeProps) =>
 
   return (
     <NodeContainer 
-      nodeId={id} nodeType={type} selected={selected} title="User Input" icon={Type} color="blue" handleLeft={false}
+      nodeId={id} nodeType={type} selected={selected} title="User Input" icon={Type} color="blue"
       tooltip="Bloco inicial para entrada de texto. Digite aqui o prompt que será enviado para os agentes de IA."
     >
       <LabelArea label="Prompt Inicial">
@@ -33,6 +35,35 @@ export const PromptInputNode = memo(({ id, type, data, selected }: NodeProps) =>
         {isError && <span className="text-[9px] text-red-500 font-bold ml-1 animate-pulse">Preenchimento obrigatório</span>}
       </LabelArea>
       <div className="flex justify-end mt-1"><StatusBadge status={data.status} /></div>
+    </NodeContainer>
+  );
+});
+
+// 0. Start Node
+/**
+ * Nó inicial do fluxo.
+ * Sem conexões de entrada; expõe JSON de inicialização como saída.
+ */
+export const StartNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.START];
+  const executionId = String(data.executionId || '');
+  const activatedAt = String(data.activatedAt || '');
+
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={Play} color={config.color} tooltip={config.tooltip} handleLeft={false}>
+      <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-2">
+        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Nó Inicial</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="text-[10px] text-slate-500 dark:text-slate-400">Execution ID:</div>
+        <div className="text-[10px] text-slate-700 dark:text-slate-200 truncate">{executionId || '-'}</div>
+        <div className="text-[10px] text-slate-500 dark:text-slate-400">Ativado em:</div>
+        <div className="text-[10px] text-slate-700 dark:text-slate-200 truncate">{activatedAt || '-'}</div>
+      </div>
+      <div className="flex justify-end items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+        <StatusBadge status={data.status} />
+      </div>
     </NodeContainer>
   );
 });
@@ -95,7 +126,7 @@ export const ImageUploadNode = memo(({ id, type, data, selected }: NodeProps) =>
   }, [id, setNodes]);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} handleLeft={false} iconSrc={config.iconSrc}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc}>
       <div className="flex flex-col gap-2">
         <label
           className={`flex flex-col items-center justify-center w-full border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative overflow-hidden group ${data.imageUrl ? '' : 'h-24'}`}
@@ -208,7 +239,7 @@ export const VideoUploadNode = memo(({ id, type, data, selected }: NodeProps) =>
   }, [id, setNodes]);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} handleLeft={false}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip}>
       <div className="flex flex-col gap-2">
         <label
           className={`flex flex-col items-center justify-center w-full border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative overflow-hidden group ${data.videoUrl ? '' : 'h-24'}`}
@@ -271,7 +302,7 @@ export const XmlUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   const snippet = content.slice(0, 280);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={FileCode} color={config.color} tooltip={config.tooltip} handleLeft={false}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={FileCode} color={config.color} tooltip={config.tooltip}>
       <div className="flex flex-col gap-2">
         <label className={`flex flex-col items-center justify-center w-full border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative overflow-hidden group h-24`}>
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -318,7 +349,7 @@ export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   }, [id, setNodes]);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={FileText} color={config.color} tooltip={config.tooltip} handleLeft={false}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={FileText} color={config.color} tooltip={config.tooltip}>
       <div className="flex flex-col gap-2">
         <label className={`flex flex-col items-center justify-center w-full border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative overflow-hidden group h-24`}>
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -350,8 +381,9 @@ export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
  */
 export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes } = useReactFlow();
-  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.GEMINI_2_5_FLASH];
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.OPENAI_AGENT];
   const isExternalAgent = type === NodeType.CLAUDE_AGENT || type === NodeType.DEEPSEEK_AGENT || type === NodeType.OPENAI_AGENT || type === NodeType.MISTRAL_AGENT || type === NodeType.HUGGING_FACE_AGENT || type === NodeType.KIMI_AGENT || type === NodeType.GROK_AGENT;
+  const isGeminiAgent = type === NodeType.GEMINI_AGENT;
   const fixedProvider = AGENT_PROVIDER_MAP[type as string] || 'google';
 
   const modelsForType = () => {
@@ -368,9 +400,25 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   const currentModel = data.model || config.defaultModel;
   const currentProvider = data.provider || 'google';
   const currentSystemMessage = data.systemMessage || '';
+  const currentTemperature = typeof data.temperature === 'number' ? data.temperature : 0.7;
+  const currentMaxTokens = typeof data.maxTokens === 'number' ? data.maxTokens : 1024;
+  const currentTimeoutMs = typeof data.timeoutMs === 'number' ? data.timeoutMs : 10000;
+  const currentCacheEnabled = typeof data.cacheEnabled === 'boolean' ? data.cacheEnabled : true;
+
+  useEffect(() => {
+    if (isGeminiAgent && currentProvider !== 'google') {
+      setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, provider: 'google' } } : n));
+    }
+  }, [isGeminiAgent, currentProvider, id, setNodes]);
 
   type UpdateField = 'provider' | 'model' | 'apiKey' | 'systemMessage';
   const updateNode = useCallback((field: UpdateField, value: string) => {
+    setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n));
+  }, [id, setNodes]);
+  const updateNumeric = useCallback((field: 'temperature' | 'maxTokens' | 'timeoutMs', value: number) => {
+    setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n));
+  }, [id, setNodes]);
+  const updateBool = useCallback((field: 'cacheEnabled', value: boolean) => {
     setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n));
   }, [id, setNodes]);
 
@@ -387,7 +435,7 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
   }, [isExternalAgent, fixedProvider, currentProvider, currentModel, validModel, updateNode]);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex} brandHeaderHex={config.brandHeaderHex}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
          <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
@@ -400,13 +448,13 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
           {/* Provider */}
           <div className="grid grid-cols-3 gap-1 items-center">
                <label className="text-[9px] text-slate-400 font-semibold flex items-center gap-1"><Server size={8}/> Model Provider</label>
-               {isExternalAgent ? (
+              {(isExternalAgent || isGeminiAgent) ? (
                  <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none" value={fixedProvider} disabled />
-               ) : (
+              ) : (
                  <select className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none" value={currentProvider} onChange={(e) => updateNode('provider', e.target.value)}>
                     {PROVIDERS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                  </select>
-               )}
+              )}
           </div>
           {/* Model Name */}
           <div className="grid grid-cols-3 gap-1 items-center">
@@ -423,6 +471,32 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
                   <Lock size={10} className="absolute right-2 top-1.5 text-slate-400 dark:text-slate-500" />
                </div>
           </div>
+          {isGeminiAgent && (
+            <div className="grid grid-cols-3 gap-1 items-center">
+              <label className="text-[9px] text-slate-400 font-semibold">Temperature</label>
+              <input type="number" min={0} max={2} step={0.1} value={currentTemperature} onChange={(e) => updateNumeric('temperature', Number(e.target.value))} className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
+            </div>
+          )}
+          {isGeminiAgent && (
+            <div className="grid grid-cols-3 gap-1 items-center">
+              <label className="text-[9px] text-slate-400 font-semibold">Max Tokens</label>
+              <input type="number" min={1} max={8192} step={1} value={currentMaxTokens} onChange={(e) => updateNumeric('maxTokens', Number(e.target.value))} className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
+            </div>
+          )}
+          {isGeminiAgent && (
+            <div className="grid grid-cols-3 gap-1 items-center">
+              <label className="text-[9px] text-slate-400 font-semibold">Timeout (ms)</label>
+              <input type="number" min={1000} max={60000} step={500} value={currentTimeoutMs} onChange={(e) => updateNumeric('timeoutMs', Number(e.target.value))} className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
+            </div>
+          )}
+          {isGeminiAgent && (
+            <div className="grid grid-cols-3 gap-1 items-center">
+              <label className="text-[9px] text-slate-400 font-semibold">Cache</label>
+              <div className="col-span-2">
+                <input type="checkbox" checked={currentCacheEnabled} onChange={(e) => updateBool('cacheEnabled', e.target.checked)} />
+              </div>
+            </div>
+          )}
       </div>
 
       <LabelArea label="System Message">
@@ -436,6 +510,19 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
         </LabelArea>
       ) : (
         <div className="text-center p-3 border border-dashed border-slate-200 dark:border-slate-700 rounded-md mt-2"><span className="text-[10px] text-slate-400 dark:text-slate-500">Aguardando entrada...</span></div>
+      )}
+      {isGeminiAgent && Array.isArray(data.history) && data.history.length > 0 && (
+        <LabelArea label="Histórico">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[10px] text-slate-600 dark:text-slate-300 max-h-24 overflow-y-auto leading-relaxed custom-scrollbar">
+            {data.history.slice(-5).reverse().map((h, i) => (
+              <div key={i} className="mb-1">
+                <div className="font-mono text-[9px] text-slate-500">{new Date(h.ts).toLocaleTimeString()}</div>
+                <div className="font-semibold">{h.prompt}</div>
+                <div className="text-slate-500 truncate">{h.result}</div>
+              </div>
+            ))}
+          </div>
+        </LabelArea>
       )}
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Output: String</span>
@@ -523,7 +610,7 @@ export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
  */
 export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title="Canvas View" icon={Eye} color="green" handleRight={false} tooltip="Visualizador final.">
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title="Canvas View" icon={Eye} color="green" tooltip="Visualizador final.">
       <div className="bg-slate-100 dark:bg-slate-900 rounded-md overflow-hidden min-h-[180px] flex items-center justify-center border border-slate-200 dark:border-slate-700 relative group">
         {data.imageUrl ? (
           <>
@@ -548,7 +635,7 @@ export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
 export const MessageOutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.MESSAGE_OUTPUT];
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} handleRight={false} tooltip={config.tooltip}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip}>
       {data.value ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[11px] text-slate-700 dark:text-slate-300 max-h-40 overflow-y-auto leading-relaxed custom-scrollbar">
           {data.value}
@@ -568,7 +655,7 @@ export const MessageOutputNode = memo(({ id, type, data, selected }: NodeProps) 
 export const VideoOutputNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.VIDEO_DISPLAY];
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} handleRight={false} tooltip={config.tooltip}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip}>
       <div className="bg-slate-100 dark:bg-slate-900 rounded-md overflow-hidden min-h-[180px] flex items-center justify-center border border-slate-200 dark:border-slate-700 relative">
         {data.videoUrl ? (
           <video src={data.videoUrl} controls className="w-full h-auto object-contain" />
@@ -689,7 +776,7 @@ export const SupabaseNode = memo(({ id, type, data, selected }: NodeProps) => {
   const currentOp = data.supabaseOperation || 'select';
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex} brandHeaderHex={config.brandHeaderHex}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
@@ -744,21 +831,278 @@ export const SupabaseNode = memo(({ id, type, data, selected }: NodeProps) => {
  * Nó genérico de comunicação/integrations placeholder.
  */
 export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || {
-    title: 'Communication', icon: Server, color: 'green', tooltip: '', iconSrc: undefined, brandHex: undefined
+    title: 'Communication', icon: Server, color: 'green', tooltip: '', iconSrc: undefined, brandHex: undefined, brandHeaderHex: undefined
   } as any;
+  const isWhatsApp = type === NodeType.WHATSAPP;
+  const isGmail = type === NodeType.GMAIL;
+  const updateWhats = (field: 'whatsPhone' | 'whatsApiKey' | 'whatsEndpoint' | 'whatsProxyUrl', value: string) => {
+    setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n)));
+  };
+  const updateGmail = (field: keyof NodeData, value: any) => {
+    setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n)));
+  };
+  if (isWhatsApp && !data.onTestConnection) {
+    const client = createWhatsAppClient();
+    const onTestConnection = async () => {
+      const phone = String(data.whatsPhone || '');
+      const apiKey = String(data.whatsApiKey || '');
+      const endpoint = String(data.whatsEndpoint || '');
+      const proxyUrl = String(data.whatsProxyUrl || '');
+      const res = client.validateConfig({ phone, apiKey, endpoint, proxyUrl });
+      if (!res.ok) {
+        setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, whatsError: res.errors.join('; '), whatsStatus: '' } } : n)));
+        return;
+      }
+      try {
+        const r = await client.testConnection({ phone, apiKey, endpoint, proxyUrl });
+        setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, whatsError: '', whatsStatus: `Conectado (${r.status})`, status: 'completed' } } : n)));
+      } catch {
+        setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, whatsError: 'Falha na conexão', whatsStatus: '', status: 'error' } } : n)));
+      }
+    };
+    setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, onTestConnection } } : n)));
+  }
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex} brandHeaderHex={config.brandHeaderHex}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
       </div>
 
+      {isWhatsApp && (
+        <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded border border-slate-100 dark:border-slate-700 flex flex-col gap-2 mb-2">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+            <Settings2 size={10} /> <span className="text-[9px] font-bold uppercase">Configurações de Conexão</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Número</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.whatsPhone || ''} onChange={(e) => updateWhats('whatsPhone', e.target.value)} placeholder="+5511999999999" />
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">API Key</label>
+            <input type="password" className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.whatsApiKey || ''} onChange={(e) => updateWhats('whatsApiKey', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Endpoint</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.whatsEndpoint || ''} onChange={(e) => updateWhats('whatsEndpoint', e.target.value)} placeholder="https://api.exemplo.com" />
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Proxy</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.whatsProxyUrl || ''} onChange={(e) => updateWhats('whatsProxyUrl', e.target.value)} placeholder="http://user:pass@host:port" />
+          </div>
+          <div className="flex justify-end items-center gap-2">
+            <button className="px-2 py-1 rounded text-[10px] bg-emerald-600 text-white font-bold hover:bg-emerald-700" onClick={() => data.onTestConnection && data.onTestConnection()}>Testar conexão</button>
+            {data.whatsError && <span className="text-[10px] text-rose-600">{data.whatsError}</span>}
+            {data.whatsStatus && <span className="text-[10px] text-emerald-600">{data.whatsStatus}</span>}
+          </div>
+        </div>
+      )}
+      {isGmail && (
+        <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded border border-slate-100 dark:border-slate-700 flex flex-col gap-2 mb-2">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+            <Settings2 size={10} /> <span className="text-[9px] font-bold uppercase">Gmail</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Operação</label>
+            <select className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailOperation || ''} onChange={(e) => updateGmail('gmailOperation', e.target.value as any)}>
+              <option value="">Selecione...</option>
+              <option value="send">Enviar e-mail</option>
+              <option value="read">Ler e-mail</option>
+              <option value="search">Pesquisar e-mail</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Client ID</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailClientId || ''} onChange={(e) => updateGmail('gmailClientId', e.target.value)} placeholder="Google OAuth Client ID" />
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Redirect URI</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailRedirectUri || ''} onChange={(e) => updateGmail('gmailRedirectUri', e.target.value)} placeholder="https://seuapp.com/" />
+          </div>
+          <div className="grid grid-cols-3 gap-1 items-center">
+            <label className="text-[9px] text-slate-400 font-semibold">Scope</label>
+            <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailScope || 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send'} onChange={(e) => updateGmail('gmailScope', e.target.value)} />
+          </div>
+          <div className="flex justify-center items-center gap-2">
+            <button className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-[11px] bg-[#1A73E8] hover:bg-[#1669C1] text-white font-bold shadow disabled:opacity-60 dark:bg-[#4285F4] dark:hover:bg-[#2F66D0]" onClick={async () => {
+              updateGmail('gmailIsLoading', true);
+              updateGmail('gmailError', '');
+              try {
+                const op = data.gmailOperation;
+                if (!op || !['send','read','search'].includes(op)) {
+                  updateGmail('gmailError', 'Selecione uma operação');
+                  updateGmail('gmailIsLoading', false);
+                  return;
+                }
+                const { verifier, challenge } = await pkceCreate();
+                const state = `gmail-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+                sessionStorage.setItem('gmail_pkce_verifier', verifier);
+                sessionStorage.setItem('gmail_auth_state', state);
+                const redirect = (data.gmailRedirectUri || window.location.origin) + (data.gmailRedirectUri?.includes('?') ? '&' : '?') + 'oauth=google';
+                const url = buildAuthUrl({ clientId: String(data.gmailClientId || ''), redirectUri: redirect, scope: String(data.gmailScope || ''), state, codeChallenge: challenge });
+                const popup = window.open(url, 'gmail_oauth', 'width=500,height=700');
+                const handler = async (event: MessageEvent) => {
+                  if (typeof event.data !== 'object' || !event.data) return;
+                  if (event.data.type !== 'gmail_oauth') return;
+                  if (event.data.state !== state) return;
+                  window.removeEventListener('message', handler);
+                  try {
+                    const code = String(event.data.code || '');
+                    const token = await exchangeCode({ clientId: String(data.gmailClientId || ''), code, redirectUri: redirect, codeVerifier: verifier });
+                    updateGmail('gmailAccessToken', token.access_token);
+                    updateGmail('gmailTokenType', token.token_type);
+                    updateGmail('gmailTokenExpiry', Date.now() + (token.expires_in || 0) * 1000);
+                    updateGmail('gmailStatus', 'Autenticado');
+                  } catch {
+                    updateGmail('gmailError', 'Falha na autenticação');
+                  } finally {
+                    updateGmail('gmailIsLoading', false);
+                    if (popup) popup.close();
+                  }
+                };
+                window.addEventListener('message', handler);
+              } catch {
+                updateGmail('gmailError', 'Erro ao iniciar OAuth');
+                updateGmail('gmailIsLoading', false);
+              }
+            }} disabled={data.gmailIsLoading}>
+              <img src="/assets/logos/gmail.svg" alt="Gmail" className="w-4 h-4" />
+              <span>Continuar com Google</span>
+            </button>
+            {data.gmailIsLoading && <span className="text-[10px] text-slate-500">Carregando...</span>}
+            {data.gmailError && <span className="text-[10px] text-rose-600">{data.gmailError}</span>}
+            {data.gmailStatus && <span className="text-[10px] text-emerald-600">{data.gmailStatus}</span>}
+          </div>
+          {data.gmailOperation === 'send' && (
+            <div className="flex flex-col gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-1 items-center">
+                <label className="text-[9px] text-slate-400 font-semibold">Destinatário</label>
+                <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailTo || ''} onChange={(e) => updateGmail('gmailTo', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-1 items-center">
+                <label className="text-[9px] text-slate-400 font-semibold">Assunto</label>
+                <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailSubject || ''} onChange={(e) => updateGmail('gmailSubject', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-1 items-start">
+                <label className="text-[9px] text-slate-400 font-semibold">Corpo</label>
+                <textarea className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 h-20" value={data.gmailBody || ''} onChange={(e) => updateGmail('gmailBody', e.target.value)} />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={!!data.gmailIsHtml} onChange={(e) => updateGmail('gmailIsHtml', e.target.checked)} />
+                <span className="text-[9px] text-slate-500 dark:text-slate-400">Formato HTML</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 items-center">
+                <label className="text-[9px] text-slate-400 font-semibold">Anexos</label>
+                <input type="file" multiple className="nodrag col-span-2 text-[9px]" onChange={async (e) => {
+                  const files: File[] = e.target.files ? Array.from(e.target.files) as File[] : [];
+                  const items: Array<{ name: string; type: string; data: string }> = [];
+                  for (const f of files) {
+                    const buf = await f.arrayBuffer();
+                    const bytes = new Uint8Array(buf);
+                    let str = '';
+                    for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+                    const b64 = btoa(str);
+                    const b64url = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    items.push({ name: f.name, type: f.type || 'application/octet-stream', data: b64url });
+                  }
+                  updateGmail('gmailAttachments', items);
+                }} />
+              </div>
+              <div className="flex justify-end">
+                <button className="px-2 py-1 rounded text-[10px] bg-orange-500 text-white font-bold hover:bg-orange-600" onClick={async () => {
+                  if (!data.gmailAccessToken) { updateGmail('gmailError', 'Autentique com Google'); return; }
+                  if (!data.gmailTo || !data.gmailSubject || !data.gmailBody) { updateGmail('gmailError', 'Preencha destinatário, assunto e corpo'); return; }
+                  try {
+                    const r = await gmailSendMessage(String(data.gmailAccessToken), String(data.gmailTo), String(data.gmailSubject), String(data.gmailBody), !!data.gmailIsHtml, data.gmailAttachments || []);
+                    updateGmail('gmailStatus', `Email enviado (${r.id})`);
+                    updateGmail('gmailError', '');
+                  } catch {
+                    updateGmail('gmailError', 'Falha ao enviar e-mail');
+                  }
+                }}>Enviar e-mail</button>
+              </div>
+            </div>
+          )}
+          {data.gmailOperation === 'read' && (
+            <div className="flex flex-col gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-1 items-center">
+                <label className="text-[9px] text-slate-400 font-semibold">Caixa</label>
+                <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailLabel || 'INBOX'} onChange={(e) => updateGmail('gmailLabel', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-1 items-center">
+                <label className="text-[9px] text-slate-400 font-semibold">Remetente</label>
+                <input className="nodrag col-span-2 text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailFrom || ''} onChange={(e) => updateGmail('gmailFrom', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-2 items-center">
+                <input type="date" className="nodrag text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailStartDate || ''} onChange={(e) => updateGmail('gmailStartDate', e.target.value)} />
+                <input type="date" className="nodrag text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" value={data.gmailEndDate || ''} onChange={(e) => updateGmail('gmailEndDate', e.target.value)} />
+              </div>
+              <div className="flex justify-end">
+                <button className="px-2 py-1 rounded text-[10px] bg-indigo-600 text-white font-bold hover:bg-indigo-700" onClick={async () => {
+                  if (!data.gmailAccessToken) { updateGmail('gmailError', 'Autentique com Google'); return; }
+                  const filters: string[] = [];
+                  if (data.gmailLabel) filters.push(`label:${data.gmailLabel}`);
+                  if (data.gmailFrom) filters.push(`from:${data.gmailFrom}`);
+                  if (data.gmailStartDate) filters.push(`after:${data.gmailStartDate}`);
+                  if (data.gmailEndDate) filters.push(`before:${data.gmailEndDate}`);
+                  const q = filters.join(' ');
+                  try {
+                    const r = await gmailListMessages(String(data.gmailAccessToken), q);
+                    const msgs = Array.isArray(r.messages) ? r.messages : [];
+                    updateGmail('gmailMessages', msgs);
+                    updateGmail('gmailError', '');
+                  } catch { updateGmail('gmailError', 'Falha ao listar e-mails'); }
+                }}>Listar</button>
+              </div>
+              <div className="max-h-28 overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700 rounded">
+                {(data.gmailMessages || []).map((m: any) => (
+                  <div key={m.id} className="px-2 py-1 text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onClick={async () => {
+                    try {
+                      const full = await gmailGetMessage(String(data.gmailAccessToken), m.id);
+                      updateGmail('gmailSelectedMessage', full);
+                      updateGmail('gmailError', '');
+                    } catch { updateGmail('gmailError', 'Falha ao carregar e-mail'); }
+                  }}>{m.id}</div>
+                ))}
+              </div>
+              {data.gmailSelectedMessage && (
+                <div className="mt-2 text-[10px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 max-h-32 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap break-words">{JSON.stringify(data.gmailSelectedMessage, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+          )}
+          {data.gmailOperation === 'search' && (
+            <div className="flex flex-col gap-2 mt-2">
+              <input className="nodrag text-[9px] p-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" placeholder="Consulta avançada (from:, subject:, after:, before:)" value={data.gmailQuery || ''} onChange={(e) => updateGmail('gmailQuery', e.target.value)} />
+              <div className="flex justify-end">
+                <button className="px-2 py-1 rounded text-[10px] bg-indigo-600 text-white font-bold hover:bg-indigo-700" onClick={async () => {
+                  if (!data.gmailAccessToken) { updateGmail('gmailError', 'Autentique com Google'); return; }
+                  try {
+                    const r = await gmailListMessages(String(data.gmailAccessToken), String(data.gmailQuery || ''));
+                    updateGmail('gmailMessages', Array.isArray(r.messages) ? r.messages : []);
+                    updateGmail('gmailError', '');
+                  } catch { updateGmail('gmailError', 'Falha na pesquisa'); }
+                }}>Pesquisar</button>
+              </div>
+              <div className="max-h-28 overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700 rounded">
+                {(data.gmailMessages || []).map((m: any) => (
+                  <div key={m.id} className="px-2 py-1 text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onClick={async () => {
+                    try { const full = await gmailGetMessage(String(data.gmailAccessToken), m.id); updateGmail('gmailSelectedMessage', full); } catch { updateGmail('gmailError', 'Falha ao carregar e-mail'); }
+                  }}>{m.id}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {data.value ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[11px] text-slate-600 dark:text-slate-300 max-h-24 overflow-y-auto leading-relaxed custom-scrollbar">{data.value}</div>
+        <div className="bg-white dark:bg-slate-900 border p-2 rounded-md text-[11px] text-slate-600 dark:text-slate-300 max-h-24 overflow-y-auto leading-relaxed custom-scrollbar" style={isWhatsApp && config.brandHex ? { borderColor: config.brandHex } : undefined}>{data.value}</div>
       ) : (
-        <div className="text-center p-3 border border-dashed border-slate-200 dark:border-slate-700 rounded-md mt-2"><span className="text-[10px] text-slate-400 dark:text-slate-500">Aguardando entrada...</span></div>
+        <div className="text-center p-3 border border-dashed rounded-md mt-2" style={isWhatsApp && config.brandHex ? { borderColor: config.brandHex } : undefined}><span className="text-[10px] text-slate-400 dark:text-slate-500">Aguardando entrada...</span></div>
       )}
 
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
@@ -799,7 +1143,7 @@ export const WebhookNode = memo(({ id, type, data, selected }: NodeProps) => {
   }, [id, payload, setNodes]);
 
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} handleLeft={false}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Ponto de entrada externo</span>
@@ -903,7 +1247,7 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
     return () => obs.disconnect();
   }, [routerCount]);
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} handleRight={false} containerRef={containerRef}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} containerRef={containerRef}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
@@ -1030,7 +1374,7 @@ export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
   const outTrueSelected = String(data.value || '').toLowerCase() === 'true';
   const outFalseSelected = String(data.value || '').toLowerCase() === 'false';
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} handleRight={false}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>

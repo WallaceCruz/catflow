@@ -1,8 +1,5 @@
 export interface TextGenerator {
-  /**
-   * Gera texto a partir de um prompt e modelo.
-   */
-  generate(prompt: string, model: string, options?: { systemInstruction?: string }): Promise<string>;
+  generate(prompt: string, model: string, options?: { systemInstruction?: string; temperature?: number; maxTokens?: number; timeoutMs?: number; useCache?: boolean }): Promise<string>;
 }
 
 export interface ImageGenerator {

@@ -24,14 +24,17 @@ const getModelId = (modelType: string): string => {
 
 interface TextGenerationOptions {
   systemInstruction?: string;
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
 }
 
 /**
  * Generic text generation for different Gemini models.
  */
 export const generateText = async (
-  prompt: string, 
-  modelTypeOrId: string, 
+  prompt: string,
+  modelTypeOrId: string,
   options: TextGenerationOptions = {}
 ): Promise<string> => {
   if (!prompt) return "";
@@ -50,15 +53,23 @@ export const generateText = async (
     ? options.systemInstruction 
     : "You are a creative AI assistant. Refine or expand upon the user's input to create better descriptions for image generation, or answer the user's query directly if it's a question. Keep it concise.";
 
+  const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
+  const maxOutputTokens = typeof options.maxTokens === 'number' ? options.maxTokens : 1024;
+  const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 10000;
+
   try {
-    const response = await ai.models.generateContent({
+    const requestPromise = ai.models.generateContent({
       model: modelId,
       contents: prompt,
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
+        temperature,
+        maxOutputTokens,
       }
     });
-    return response.text || prompt;
+    const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), Math.max(1000, timeoutMs)));
+    const response = await Promise.race([requestPromise, timeoutPromise]);
+    return (response as any).text || String(prompt);
   } catch (error) {
     console.error(`Error generating text with ${modelId}:`, error);
     throw error;

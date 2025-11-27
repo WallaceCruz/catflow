@@ -118,20 +118,20 @@ export function useWorkflowEngine() {
 
       try {
         // --- TEXT NODES ---
-        if (
-            targetNode.type === NodeType.PROMPT_ENHANCER ||
-            targetNode.type === NodeType.GEMINI_3_PRO ||
-            targetNode.type === NodeType.GEMINI_2_5_FLASH ||
-            targetNode.type === NodeType.GEMINI_FLASH_LITE
-        ) {
+        if (targetNode.type === NodeType.GEMINI_AGENT) {
           updateNodeStatus(targetNode.id, { status: 'running' });
           const cfg = NODE_CONFIGS[targetNode.type as keyof typeof NODE_CONFIGS];
-          const modelToUse = targetNode.data.model || cfg?.defaultModel || targetNode.type;
+          const modelToUse = targetNode.data.model || cfg?.defaultModel || 'gemini-2.5-flash';
           const systemInstruction = targetNode.data.systemMessage;
+          const temperature = typeof targetNode.data.temperature === 'number' ? targetNode.data.temperature : 0.7;
+          const maxTokens = typeof targetNode.data.maxTokens === 'number' ? targetNode.data.maxTokens : 1024;
+          const timeoutMs = typeof targetNode.data.timeoutMs === 'number' ? targetNode.data.timeoutMs : 10000;
+          const useCache = typeof targetNode.data.cacheEnabled === 'boolean' ? targetNode.data.cacheEnabled : true;
 
-          result = await deps.text.generate(payload, modelToUse, { systemInstruction });
+          result = await deps.text.generate(String(payload ?? ''), modelToUse, { systemInstruction, temperature, maxTokens, timeoutMs, useCache });
           updateNodeStatus(targetNode.id, { status: 'completed', value: result });
-        } 
+          setNodes((nds) => nds.map((n) => n.id === targetNode.id ? { ...n, data: { ...n.data, history: [...(Array.isArray(n.data.history) ? n.data.history : []), { prompt: String(payload ?? ''), model: modelToUse, result: String(result ?? ''), ts: Date.now() }] } } : n));
+        }
         else if (
             targetNode.type === NodeType.CLAUDE_AGENT ||
             targetNode.type === NodeType.DEEPSEEK_AGENT ||
@@ -254,14 +254,55 @@ export function useWorkflowEngine() {
       const nodes = getNodes();
       const nodeMap = new Map<string, any>(nodes.map(n => [n.id, n]));
       const edges = getEdges();
+      const startNodes = nodes.filter(n => n.type === NodeType.START);
       const promptInputs = nodes.filter(n => n.type === NodeType.PROMPT_INPUT);
       const videoInputs = nodes.filter(n => n.type === NodeType.VIDEO_UPLOAD);
       const xmlInputs = nodes.filter(n => n.type === NodeType.XML_UPLOAD);
       const pdfInputs = nodes.filter(n => n.type === NodeType.PDF_UPLOAD);
       const webhookInputs = nodes.filter(n => n.type === NodeType.WEBHOOK);
 
-      if (promptInputs.length === 0 && videoInputs.length === 0 && xmlInputs.length === 0 && pdfInputs.length === 0 && webhookInputs.length === 0) {
+      if (startNodes.length === 0 && promptInputs.length === 0 && videoInputs.length === 0 && xmlInputs.length === 0 && pdfInputs.length === 0 && webhookInputs.length === 0) {
           throw new Error("NO_INPUT_NODE");
+      }
+
+      // Preferência: se existir nó inicial, executa a partir dele
+      if (startNodes.length > 0) {
+        if (startNodes.length !== 1) {
+          throw new Error('MULTIPLE_START_NODES');
+        }
+        const start = startNodes[0];
+        const incomingToStart = edges.filter(e => e.target === start.id);
+        const outgoingFromStart = edges.filter(e => e.source === start.id);
+        if (incomingToStart.length > 0) {
+          updateNodeStatus(start.id, { status: 'error' });
+          throw new Error('START_HAS_INPUTS');
+        }
+        if (outgoingFromStart.length < 1) {
+          updateNodeStatus(start.id, { status: 'error' });
+          throw new Error('START_NO_OUTPUTS');
+        }
+        let initialData: any = {};
+        try {
+          const raw = start.data.initialData;
+          if (typeof raw === 'string' && raw.trim().length > 0) {
+            initialData = JSON.parse(raw);
+          } else if (typeof raw === 'object' && raw !== null) {
+            initialData = raw;
+          }
+        } catch {}
+        // Dependencies check (mínimo)
+        const depsOk = !!(deps && deps.text && deps.image && deps.logger);
+        if (!depsOk) {
+          updateNodeStatus(start.id, { status: 'error' });
+          throw new Error('MISSING_DEPENDENCIES');
+        }
+        // Exec ID e timestamp
+        const execId = `exec-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+        const ts = new Date().toISOString();
+        const output = { status: 'ready', execution_id: execId, initial_data: initialData };
+        updateNodeStatus(start.id, { status: 'completed', executionId: execId, activatedAt: ts, value: JSON.stringify(output) });
+        await processNodeChildren(start.id, output, edges, nodeMap, new Set<string>());
+        return;
       }
 
       for (const inputNode of promptInputs) {
@@ -326,6 +367,14 @@ export function useWorkflowEngine() {
           alert("Adicione um nó de entrada (Prompt Input) para começar.");
       } else if (errorMsg === "validation_error") {
           setTimeout(() => alert("Por favor, preencha os campos obrigatórios."), 100);
+      } else if (errorMsg === 'multiple_start_nodes') {
+          alert('Existe mais de um Nó Inicial. Mantenha apenas um.');
+      } else if (errorMsg === 'start_has_inputs') {
+          alert('O Nó Inicial não pode receber conexões de entrada.');
+      } else if (errorMsg === 'start_no_outputs') {
+          alert('O Nó Inicial precisa de ao menos uma conexão de saída.');
+      } else if (errorMsg === 'missing_dependencies') {
+          alert('Dependências indisponíveis. Verifique configurações e chaves.');
       } else if (
           errorMsg.includes("permission_denied") || 
           errorMsg.includes("403") || 

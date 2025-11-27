@@ -7,6 +7,15 @@ export interface UIState {
   showClearModal: boolean;
   openClearModal: () => void;
   closeClearModal: () => void;
+  showControls: boolean;
+  zoomOnScroll: boolean;
+  panOnDrag: boolean;
+  setShowControls: (v: boolean) => void;
+  setZoomOnScroll: (v: boolean) => void;
+  setPanOnDrag: (v: boolean) => void;
+  toggleShowControls: () => void;
+  toggleZoomOnScroll: () => void;
+  togglePanOnDrag: () => void;
   inputsOpen: boolean;
   textOpen: boolean;
   imageOpen: boolean;
@@ -33,6 +42,15 @@ export const useUIStore = create<UIState>()(
       showClearModal: false,
       openClearModal: () => set({ showClearModal: true }),
       closeClearModal: () => set({ showClearModal: false }),
+      showControls: true,
+      zoomOnScroll: true,
+      panOnDrag: false,
+      setShowControls: (v) => set({ showControls: v }),
+      setZoomOnScroll: (v) => set({ zoomOnScroll: v }),
+      setPanOnDrag: (v) => set({ panOnDrag: v }),
+      toggleShowControls: () => set((s) => ({ showControls: !s.showControls })),
+      toggleZoomOnScroll: () => set((s) => ({ zoomOnScroll: !s.zoomOnScroll })),
+      togglePanOnDrag: () => set((s) => ({ panOnDrag: !s.panOnDrag })),
       inputsOpen: true,
       textOpen: true,
       imageOpen: true,
@@ -55,6 +73,9 @@ export const useUIStore = create<UIState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         searchTerm: state.searchTerm,
+        showControls: state.showControls,
+        zoomOnScroll: state.zoomOnScroll,
+        panOnDrag: state.panOnDrag,
         inputsOpen: state.inputsOpen,
         textOpen: state.textOpen,
         imageOpen: state.imageOpen,

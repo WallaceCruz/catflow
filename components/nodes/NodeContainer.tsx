@@ -13,6 +13,7 @@ interface NodeContainerProps {
   icon: any;
   color: string;
   brandHex?: string;
+  brandHeaderHex?: string;
   handleLeft?: boolean;
   handleRight?: boolean;
   tooltip?: string;
@@ -28,6 +29,7 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   icon: Icon, 
   color,
   brandHex,
+  brandHeaderHex,
   handleLeft = true,
   handleRight = true,
   tooltip,
@@ -42,9 +44,6 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   const headerBg = NODE_THEME[color as keyof typeof NODE_THEME]?.header || NODE_THEME['slate'].header;
   const headerText = NODE_THEME[color as keyof typeof NODE_THEME]?.headerText || NODE_THEME['slate'].headerText;
   const borderClass = NODE_THEME[color as keyof typeof NODE_THEME]?.border || NODE_THEME['slate'].border;
-  const handleBg = NODE_THEME[color as keyof typeof NODE_THEME]?.handleBg || NODE_THEME['slate'].handleBg;
-  const handleBorder = NODE_THEME[color as keyof typeof NODE_THEME]?.handleBorder || NODE_THEME['slate'].handleBorder;
-  const handleHover = NODE_THEME[color as keyof typeof NODE_THEME]?.handleHover || NODE_THEME['slate'].handleHover;
   const ringClass = selected ? 'ring-2 ring-offset-2 ring-orange-400 dark:ring-offset-slate-900' : '';
 
   const toRgba = (hex: string, alpha: number) => {
@@ -54,8 +53,27 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
     const b = parseInt(h.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
-  const brandBgStyle = brandHex ? { backgroundColor: toRgba(brandHex, 0.35) } : undefined;
-  const brandTextStyle = brandHex && !isDarkMode ? { color: brandHex } : undefined;
+  const brandBgStyleLight = brandHex ? { backgroundColor: toRgba(brandHex, 0.35) } : undefined;
+  const brandBgStyleDark = brandHex ? { backgroundColor: toRgba(brandHex, 0.22) } : undefined;
+  const headerInlineStyle = brandHeaderHex
+    ? (isDarkMode ? brandBgStyleDark : { backgroundColor: brandHeaderHex })
+    : (isDarkMode ? brandBgStyleDark : brandBgStyleLight);
+  const titleInlineStyle = brandHex ? { color: brandHex } : undefined;
+  const COLOR_HEX: Record<string, string> = {
+    blue: '#3b82f6',
+    purple: '#a855f7',
+    indigo: '#6366f1',
+    cyan: '#06b6d4',
+    teal: '#14b8a6',
+    orange: '#f97316',
+    amber: '#f59e0b',
+    rose: '#f43f5e',
+    green: '#10b981',
+    slate: '#64748b'
+  };
+  const useBrand = brandHex && brandHex.toLowerCase() !== '#000000' ? brandHex : undefined;
+  const connectorColor = useBrand || COLOR_HEX[color] || '#64748b';
+  const connectorBg = toRgba(connectorColor, isDarkMode ? 0.22 : 0.35);
 
   const onDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,14 +106,14 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   return (
     <div ref={containerRef} className={`relative w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl border-2 ${borderClass} overflow-visible group/node ${ringClass} transition-colors duration-200`} style={brandHex ? { borderColor: brandHex } : undefined}>
       {/* Header */}
-      <div className={`px-4 py-3 flex items-center justify-between ${brandHex ? '' : headerBg} rounded-t-xl relative border-b border-white/30 dark:border-transparent`} style={brandHex ? brandBgStyle : undefined}>
+      <div className={`px-4 py-3 flex items-center justify-between ${brandHeaderHex || brandHex ? '' : headerBg} rounded-t-xl relative border-b border-white/30 dark:border-transparent`} style={headerInlineStyle}>
         <div className={`flex items-center gap-2 ${brandHex ? '' : headerText}`}> 
           {iconSrc && !imgError ? (
             <img src={iconSrc} alt="icon" className="w-5 h-5" loading="lazy" onError={() => setImgError(true)} />
           ) : (
             <Icon size={16} strokeWidth={2.5} />
           )}
-          <span className={`font-semibold text-sm tracking-wide ${brandHex ? 'dark:text-white' : ''}`} style={brandTextStyle}>{title}</span>
+          <span className={`font-semibold text-sm tracking-wide`} style={titleInlineStyle}>{title}</span>
         </div>
 
         <div className="flex items-center gap-1">
@@ -136,16 +154,16 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
           <Handle 
             type="target" 
             position={Position.Left} 
-            style={{ left: -32, zIndex: 5, backgroundColor: brandHex ? toRgba(brandHex, 0.35) : undefined, borderColor: brandHex || undefined }} 
-            className={`w-5 h-5 border-2 transition-colors ${brandHex ? '' : handleBg} ${brandHex ? '' : handleBorder} ${brandHex ? '' : handleHover} rounded-full`} 
+            style={{ left: -60, zIndex: 7, width: 32, height: 32, backgroundColor: connectorBg, borderColor: connectorColor, borderWidth: 3, borderStyle: 'solid', borderRadius: '9999px' }} 
+            className={`transition-colors`} 
           />
       )}
       {handleRight && (
           <Handle 
             type="source" 
             position={Position.Right} 
-            style={{ right: -32, zIndex: 5, backgroundColor: brandHex ? toRgba(brandHex, 0.35) : undefined, borderColor: brandHex || undefined }} 
-            className={`w-5 h-5 border-2 transition-colors ${brandHex ? '' : handleBg} ${brandHex ? '' : handleBorder} ${brandHex ? '' : handleHover} rounded-full`} 
+            style={{ right: -60, zIndex: 7, width: 32, height: 32, backgroundColor: connectorBg, borderColor: connectorColor, borderWidth: 3, borderStyle: 'solid', borderRadius: '9999px' }} 
+            className={`transition-colors`} 
           />
       )}
     </div>

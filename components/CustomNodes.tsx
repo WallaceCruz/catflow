@@ -8,6 +8,7 @@ import { pkceCreate, buildAuthUrl, exchangeCode, gmailListMessages, gmailGetMess
 import { StatusBadge, LabelArea } from './nodes/NodeComponents';
 import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, DEEPSEEK_MODELS, MISTRAL_MODELS, AGENT_PROVIDER_MAP, HUGGINGFACE_MODELS, KIMI_MODELS, GROK_MODELS } from '../config';
 import { NodeType, NodeData } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 // 1. Prompt Input Node
 /**
@@ -1203,6 +1204,29 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
   const { setNodes, getEdges } = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
   const [handleStep, setHandleStep] = useState(32);
+  const { isDarkMode } = useTheme();
+  const COLOR_HEX: Record<string, string> = {
+    blue: '#3b82f6',
+    purple: '#a855f7',
+    indigo: '#6366f1',
+    cyan: '#06b6d4',
+    teal: '#14b8a6',
+    orange: '#f97316',
+    amber: '#f59e0b',
+    rose: '#f43f5e',
+    green: '#10b981',
+    slate: '#64748b'
+  };
+  const useBrand = config.brandHex && config.brandHex.toLowerCase() !== '#000000' ? config.brandHex : undefined;
+  const connectorColor = useBrand || COLOR_HEX[config.color] || '#64748b';
+  const toRgba = (hex: string, alpha: number) => {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  const connectorBg = toRgba(connectorColor, isDarkMode ? 0.22 : 0.35);
   type RouterField = 'routerMode' | 'routerIndex' | 'routerCount';
   const updateNode = useCallback((field: RouterField, value: string) => {
     setNodes((nodes) => nodes.map((n) => {
@@ -1230,8 +1254,11 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
   const edgeCountsByIndex = Array.from({ length: routerCount }, (_, i) => getEdges().filter(e => e.source === id && String(e.sourceHandle || '') === `out-${i}`).length);
   useEffect(() => {
     const h = containerRef.current?.offsetHeight ?? 240;
-    const available = Math.max(h - 140, 64);
-    const step = Math.max(24, Math.floor(available / Math.max(routerCount, 1)));
+    const topBase = 96;
+    const bottomMargin = 48;
+    const handleSize = 32;
+    const verticalRange = Math.max(h - topBase - bottomMargin, handleSize);
+    const step = Math.max(handleSize + 8, Math.floor(verticalRange / Math.max(routerCount - 1, 1)));
     setHandleStep(step);
   }, [routerCount]);
   useEffect(() => {
@@ -1239,15 +1266,18 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
     if (!el) return;
     const obs = new ResizeObserver(() => {
       const h = el.offsetHeight;
-      const available = Math.max(h - 140, 64);
-      const step = Math.max(24, Math.floor(available / Math.max(routerCount, 1)));
+      const topBase = 96;
+      const bottomMargin = 48;
+      const handleSize = 32;
+      const verticalRange = Math.max(h - topBase - bottomMargin, handleSize);
+      const step = Math.max(handleSize + 8, Math.floor(verticalRange / Math.max(routerCount - 1, 1)));
       setHandleStep(step);
     });
     obs.observe(el);
     return () => obs.disconnect();
   }, [routerCount]);
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} containerRef={containerRef}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} containerRef={containerRef} handleRight={false}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
@@ -1296,14 +1326,15 @@ export const RouterNode = memo(({ id, type, data, selected }: NodeProps) => {
          <StatusBadge status={data.status} />
       </div>
       {Array.from({ length: routerCount }, (_, i) => (
-        <div key={i} className="group/hdl absolute" style={{ right: -32, top: 96 + (i * handleStep), zIndex: 5 }}>
+        <div key={i} className="group/hdl absolute" style={{ right: -60, top: 96 + (i * handleStep), zIndex: 7 }}>
           <Handle 
             id={`out-${i}`} 
             type="source" 
             position={Position.Right} 
-            className={`w-5 h-5 border-2 rounded-full bg-white dark:bg-slate-900 border-indigo-300 dark:border-indigo-700 ${data.activeHandle === `out-${i}` ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''}`} 
+            style={{ width: 32, height: 32, backgroundColor: connectorBg, borderColor: connectorColor, borderWidth: 3, borderStyle: 'solid', borderRadius: '9999px' }}
+            className={`${data.activeHandle === `out-${i}` ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''} transition-colors`} 
           />
-          <div className={`absolute -right-24 top-0 px-2 py-1 rounded border text-[9px] invisible opacity-0 translate-x-2 group-hover/hdl:visible group-hover/hdl:opacity-100 group-hover/hdl:translate-x-0 transition duration-200 ease-out bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-2xl`}>out-{i}</div>
+          <div className={`absolute -right-24 top-1 px-2 py-1 rounded border text-[9px] invisible opacity-0 translate-x-2 group-hover/hdl:visible group-hover/hdl:opacity-100 group-hover/hdl:translate-x-0 transition duration-200 ease-out bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-2xl`}>out-{i}</div>
         </div>
       ))}
     </NodeContainer>
@@ -1356,6 +1387,18 @@ export const FunctionNode = memo(({ id, type, data, selected }: NodeProps) => {
 export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.CONDITION];
   const { setNodes } = useReactFlow();
+  const { isDarkMode } = useTheme();
+  const toRgba = (hex: string, alpha: number) => {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  const GREEN = '#10b981';
+  const ROSE = '#f43f5e';
+  const trueBg = toRgba(GREEN, isDarkMode ? 0.22 : 0.35);
+  const falseBg = toRgba(ROSE, isDarkMode ? 0.22 : 0.35);
   type CondField = 'conditionExpr';
   const updateNode = useCallback((field: CondField, value: string) => {
     setNodes((nodes) => nodes.map((n) => {
@@ -1374,7 +1417,7 @@ export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
   const outTrueSelected = String(data.value || '').toLowerCase() === 'true';
   const outFalseSelected = String(data.value || '').toLowerCase() === 'false';
   return (
-    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip}>
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} handleRight={false}>
       <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 mb-3">
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
         <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Input do Nó Anterior</span>
@@ -1393,12 +1436,12 @@ export const ConditionNode = memo(({ id, type, data, selected }: NodeProps) => {
          <span className="text-[10px] text-slate-400 font-medium">Output: Control</span>
          <StatusBadge status={data.status} />
       </div>
-      <div className="group/hdl absolute" style={{ right: -32, top: 96, zIndex: 5 }}>
-        <Handle id="true" type="source" position={Position.Right} className={`w-5 h-5 border-2 rounded-full bg-white dark:bg-slate-900 border-green-400 dark:border-green-600 ${data.activeHandle === 'true' ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''}`} />
+      <div className="group/hdl absolute" style={{ right: -60, top: 96, zIndex: 7 }}>
+        <Handle id="true" type="source" position={Position.Right} style={{ width: 32, height: 32, backgroundColor: trueBg, borderColor: GREEN, borderWidth: 3, borderStyle: 'solid', borderRadius: '9999px' }} className={`${data.activeHandle === 'true' ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''}`} />
         <div className={`absolute -right-24 top-0 px-2 py-1 rounded border text-[9px] invisible opacity-0 translate-x-2 group-hover/hdl:visible group-hover/hdl:opacity-100 group-hover/hdl:translate-x-0 transition duration-200 ease-out bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 shadow-2xl`}>true</div>
       </div>
-      <div className="group/hdl absolute" style={{ right: -32, top: 128, zIndex: 5 }}>
-        <Handle id="false" type="source" position={Position.Right} className={`w-5 h-5 border-2 rounded-full bg-white dark:bg-slate-900 border-rose-400 dark:border-rose-600 ${data.activeHandle === 'false' ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''}`} />
+      <div className="group/hdl absolute" style={{ right: -60, top: 144, zIndex: 7 }}>
+        <Handle id="false" type="source" position={Position.Right} style={{ width: 32, height: 32, backgroundColor: falseBg, borderColor: ROSE, borderWidth: 3, borderStyle: 'solid', borderRadius: '9999px' }} className={`${data.activeHandle === 'false' ? 'ring-2 ring-orange-300 dark:ring-orange-700' : ''}`} />
         <div className={`absolute -right-24 top-0 px-2 py-1 rounded border text-[9px] invisible opacity-0 translate-x-2 group-hover/hdl:visible group-hover/hdl:opacity-100 group-hover/hdl:translate-x-0 transition duration-200 ease-out bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 shadow-2xl`}>false</div>
       </div>
     </NodeContainer>

@@ -3,8 +3,7 @@ import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
 import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy, Play } from 'lucide-react';
 
 import { NodeContainer } from './nodes/NodeContainer';
-import { createWhatsAppClient } from '../services/whatsappService';
-import { pkceCreate, buildAuthUrl, exchangeCode, gmailListMessages, gmailGetMessage, gmailSendMessage } from '../services/gmailService';
+// serviços pesados são carregados sob demanda para reduzir o bundle inicial
 import { StatusBadge, LabelArea } from './nodes/NodeComponents';
 import { TEXT_MODELS, PROVIDERS, NODE_CONFIGS, OPENAI_MODELS, ANTHROPIC_MODELS, DEEPSEEK_MODELS, MISTRAL_MODELS, AGENT_PROVIDER_MAP, HUGGINGFACE_MODELS, KIMI_MODELS, GROK_MODELS } from '../config';
 import { NodeType, NodeData } from '../types';
@@ -845,8 +844,9 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
     setNodes((nodes) => nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n)));
   };
   if (isWhatsApp && !data.onTestConnection) {
-    const client = createWhatsAppClient();
     const onTestConnection = async () => {
+      const { createWhatsAppClient } = await import('../services/whatsappService');
+      const client = createWhatsAppClient();
       const phone = String(data.whatsPhone || '');
       const apiKey = String(data.whatsApiKey || '');
       const endpoint = String(data.whatsEndpoint || '');
@@ -938,12 +938,13 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
                   updateGmail('gmailIsLoading', false);
                   return;
                 }
-                const { verifier, challenge } = await pkceCreate();
+            const { pkceCreate, buildAuthUrl, exchangeCode } = await import('../services/gmailService');
+            const { verifier, challenge } = await pkceCreate();
                 const state = `gmail-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
                 sessionStorage.setItem('gmail_pkce_verifier', verifier);
                 sessionStorage.setItem('gmail_auth_state', state);
                 const redirect = (data.gmailRedirectUri || window.location.origin) + (data.gmailRedirectUri?.includes('?') ? '&' : '?') + 'oauth=google';
-                const url = buildAuthUrl({ clientId: String(data.gmailClientId || ''), redirectUri: redirect, scope: String(data.gmailScope || ''), state, codeChallenge: challenge });
+            const url = buildAuthUrl({ clientId: String(data.gmailClientId || ''), redirectUri: redirect, scope: String(data.gmailScope || ''), state, codeChallenge: challenge });
                 const popup = window.open(url, 'gmail_oauth', 'width=500,height=700');
                 const handler = async (event: MessageEvent) => {
                   if (typeof event.data !== 'object' || !event.data) return;
@@ -1017,7 +1018,8 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
                   if (!data.gmailAccessToken) { updateGmail('gmailError', 'Autentique com Google'); return; }
                   if (!data.gmailTo || !data.gmailSubject || !data.gmailBody) { updateGmail('gmailError', 'Preencha destinatário, assunto e corpo'); return; }
                   try {
-                    const r = await gmailSendMessage(String(data.gmailAccessToken), String(data.gmailTo), String(data.gmailSubject), String(data.gmailBody), !!data.gmailIsHtml, data.gmailAttachments || []);
+                  const { gmailSendMessage } = await import('../services/gmailService');
+                  const r = await gmailSendMessage(String(data.gmailAccessToken), String(data.gmailTo), String(data.gmailSubject), String(data.gmailBody), !!data.gmailIsHtml, data.gmailAttachments || []);
                     updateGmail('gmailStatus', `Email enviado (${r.id})`);
                     updateGmail('gmailError', '');
                   } catch {
@@ -1051,7 +1053,8 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
                   if (data.gmailEndDate) filters.push(`before:${data.gmailEndDate}`);
                   const q = filters.join(' ');
                   try {
-                    const r = await gmailListMessages(String(data.gmailAccessToken), q);
+                  const { gmailListMessages } = await import('../services/gmailService');
+                  const r = await gmailListMessages(String(data.gmailAccessToken), q);
                     const msgs = Array.isArray(r.messages) ? r.messages : [];
                     updateGmail('gmailMessages', msgs);
                     updateGmail('gmailError', '');
@@ -1062,6 +1065,7 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
                 {(data.gmailMessages || []).map((m: any) => (
                   <div key={m.id} className="px-2 py-1 text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onClick={async () => {
                     try {
+                      const { gmailGetMessage } = await import('../services/gmailService');
                       const full = await gmailGetMessage(String(data.gmailAccessToken), m.id);
                       updateGmail('gmailSelectedMessage', full);
                       updateGmail('gmailError', '');
@@ -1083,6 +1087,7 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
                 <button className="px-2 py-1 rounded text-[10px] bg-indigo-600 text-white font-bold hover:bg-indigo-700" onClick={async () => {
                   if (!data.gmailAccessToken) { updateGmail('gmailError', 'Autentique com Google'); return; }
                   try {
+                    const { gmailListMessages } = await import('../services/gmailService');
                     const r = await gmailListMessages(String(data.gmailAccessToken), String(data.gmailQuery || ''));
                     updateGmail('gmailMessages', Array.isArray(r.messages) ? r.messages : []);
                     updateGmail('gmailError', '');
@@ -1092,7 +1097,7 @@ export const CommunicationNode = memo(({ id, type, data, selected }: NodeProps) 
               <div className="max-h-28 overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700 rounded">
                 {(data.gmailMessages || []).map((m: any) => (
                   <div key={m.id} className="px-2 py-1 text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onClick={async () => {
-                    try { const full = await gmailGetMessage(String(data.gmailAccessToken), m.id); updateGmail('gmailSelectedMessage', full); } catch { updateGmail('gmailError', 'Falha ao carregar e-mail'); }
+                    try { const { gmailGetMessage } = await import('../services/gmailService'); const full = await gmailGetMessage(String(data.gmailAccessToken), m.id); updateGmail('gmailSelectedMessage', full); } catch { updateGmail('gmailError', 'Falha ao carregar e-mail'); }
                   }}>{m.id}</div>
                 ))}
               </div>

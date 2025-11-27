@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
+      publicDir: 'assets',
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -20,6 +21,14 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
+        minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true
+          }
+        },
+        assetsInlineLimit: 0,
         rollupOptions: {
           output: {
             manualChunks: {

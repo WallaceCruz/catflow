@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode } from 'lucide-react';
+import { Type, Eye, GripVertical, Upload, Zap, ChevronDown, Search, Video, GitBranch, Code2, Filter, Timer, FileText, FileCode, Server } from 'lucide-react';
 import { NodeType } from '../../types';
 import { NODE_CONFIGS } from '../../config';
 import { useUI } from '../../hooks/useUI';
@@ -80,10 +80,10 @@ export const Sidebar = () => {
   }, [searchTerm]);
   const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video', 'Upload XML', 'Upload PDF'].filter(matches).length;
   const imageCount = ['Nano Banana', 'Nano Banana Pro'].filter(matches).length;
-  const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output'].filter(matches).length;
+  const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output', 'HTTP Response'].filter(matches).length;
   const agentsCount = ['Gemini', 'Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI', 'Hugging Face', 'Kimi', 'Grok'].filter(matches).length;
   const integrationsCount = ['Supabase', 'Redis', 'Microsoft Excel', 'Microsoft Word', 'Upstash', 'PostgreSQL', 'TypeORM', 'Neon', 'SQL Server'].filter(matches).length;
-  const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube'].filter(matches).length;
+  const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube', 'HTTP Request'].filter(matches).length;
   const flowCount = ['Start', 'Router', 'Function', 'Condition', 'Wait'].filter(matches).length;
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-xl z-30 transition-colors duration-300">
@@ -167,6 +167,9 @@ export const Sidebar = () => {
           )}
           {(!searchTerm || matches('YouTube')) && (
             <SidebarItem type={NodeType.YOUTUBE} iconSrc={NODE_CONFIGS[NodeType.YOUTUBE].iconSrc} label="YouTube" />
+          )}
+          {(!searchTerm || matches('HTTP Request')) && (
+            <SidebarItem type={NodeType.HTTP_REQUEST} icon={Server} label="HTTP Request" />
           )}
             {(!searchTerm || matches('Microsoft Teams')) && (
               <SidebarItem type={NodeType.TEAMS} iconSrc={NODE_CONFIGS[NodeType.TEAMS].iconSrc} label="Microsoft Teams" />
@@ -313,9 +316,12 @@ export const Sidebar = () => {
             {(!searchTerm || matches('Video Viewer')) && (
               <SidebarItem type={NodeType.VIDEO_DISPLAY} icon={Video} label="Video Viewer" />
             )}
-            {(!searchTerm || matches('Message Output')) && (
-              <SidebarItem type={NodeType.MESSAGE_OUTPUT} icon={Type} label="Message Output" />
-            )}
+          {(!searchTerm || matches('Message Output')) && (
+            <SidebarItem type={NodeType.MESSAGE_OUTPUT} icon={Type} label="Message Output" />
+          )}
+          {(!searchTerm || matches('HTTP Response')) && (
+            <SidebarItem type={NodeType.HTTP_RESPONSE} icon={Eye} label="HTTP Response" />
+          )}
           </Collapsible>
         </div>
       </div>

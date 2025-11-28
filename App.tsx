@@ -13,11 +13,12 @@ import ReactFlow, {
   EdgeLabelRenderer,
   getBezierPath,
   EdgeProps,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import { NodeType } from './types';
-import { StartNode, PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode } from './components/CustomNodes';
+import { StartNode, PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode, HttpRequestNode, HttpResponseNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -77,6 +78,8 @@ const nodeTypes = {
   [NodeType.CONDITION]: ConditionNode,
   [NodeType.WAIT]: WaitNode,
   [NodeType.MERGE]: MergeNode,
+  [NodeType.HTTP_REQUEST]: HttpRequestNode,
+  [NodeType.HTTP_RESPONSE]: HttpResponseNode,
 };
 
 const RemovableEdge: React.FC<EdgeProps> = (props) => {
@@ -170,11 +173,15 @@ function FlowContent() {
   const { project, toObject } = useReactFlow();
   const { isDarkMode } = useTheme();
 
-  const edgeOptions = useMemo(() => ({
-    type: 'removable',
-    animated: true,
-    style: { stroke: isDarkMode ? '#60a5fa' : '#6366f1', strokeWidth: 3 },
-  }), [isDarkMode]);
+  const edgeOptions = useMemo(() => {
+    const stroke = isDarkMode ? '#60a5fa' : '#6366f1';
+    return {
+      type: 'removable',
+      animated: true,
+      style: { stroke, strokeWidth: 3 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 14, height: 14 },
+    } as const;
+  }, [isDarkMode]);
 
   // Hooks
   const { 

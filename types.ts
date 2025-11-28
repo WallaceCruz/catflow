@@ -53,6 +53,8 @@ export enum NodeType {
   CONDITION = 'condition',
   WAIT = 'wait',
   MERGE = 'merge',
+  HTTP_REQUEST = 'httpRequest',
+  HTTP_RESPONSE = 'httpResponse',
 }
 
 export interface NodeData {
@@ -143,6 +145,25 @@ export interface NodeData {
   whatsError?: string;
   whatsStatus?: string;
   onTestConnection?: () => Promise<void> | void;
+
+  httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  httpUrl?: string;
+  httpHeaders?: string;
+  httpParams?: string;
+  httpBody?: string;
+  httpTimeoutMs?: number;
+  httpLogEnabled?: boolean;
+  httpResponseView?: 'auto' | 'json' | 'xml' | 'text';
+  httpStatus?: number;
+  httpOk?: boolean;
+  httpRespHeaders?: Record<string, string>;
+  httpBodyText?: string;
+  httpBodyJson?: any;
+  httpBodyXml?: any;
+  httpTokenType?: string;
+  httpAccessToken?: string;
+  httpPairs?: Array<{ key: string; value: string }>;
+  httpAuthError?: string;
 }
 
 export interface PipelineStepResult {

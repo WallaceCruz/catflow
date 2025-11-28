@@ -42,3 +42,7 @@ export interface Logger {
   error(message: string, meta?: any): void;
   debug(message: string, meta?: any): void;
 }
+
+export interface HttpClient {
+  request(opts: { method: 'GET' | 'POST' | 'PUT' | 'DELETE'; url: string; headers?: Record<string, string>; params?: Record<string, any>; body?: string; timeoutMs?: number }): Promise<{ ok: boolean; status: number; headers: Record<string, string>; text: string; json?: any; xml?: any }>;
+}

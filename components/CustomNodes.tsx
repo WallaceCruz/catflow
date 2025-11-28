@@ -374,6 +374,177 @@ export const PdfUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
   );
 });
 
+export const HttpRequestNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.HTTP_REQUEST];
+  const method = data.httpMethod || 'GET';
+  const url = String(data.httpUrl || '');
+  const headers = String(data.httpHeaders || '');
+  const params = String(data.httpParams || '');
+  const body = String(data.httpBody || '');
+  const timeoutMs = typeof data.httpTimeoutMs === 'number' ? data.httpTimeoutMs : 10000;
+  const logEnabled = !!data.httpLogEnabled;
+
+  const setData = (patch: Partial<NodeData>) => {
+    setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, ...patch } } : n));
+  };
+
+  const validateJson = (raw: string) => {
+    if (!raw || raw.trim() === '') return true;
+    try { JSON.parse(raw); return true; } catch { return false; }
+  };
+
+  const headersOk = validateJson(headers);
+  const paramsOk = validateJson(params);
+  const urlOk = /^https?:\/\//i.test(url);
+
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={Server} color={config.color} tooltip={config.tooltip}>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <LabelArea label="Method">
+            <select className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={method} onChange={(e) => setData({ httpMethod: e.target.value as any })}>
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="URL">
+            <input className={`w-full text-xs p-2 border ${urlOk ? 'border-slate-200 dark:border-slate-700' : 'border-red-500'} rounded-md bg-white dark:bg-slate-800`} value={url} onChange={(e) => setData({ httpUrl: e.target.value })} placeholder="https://api.exemplo.com/endpoint" />
+          </LabelArea>
+        </div>
+        <div>
+          <LabelArea label="Token Type">
+            <input className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={String(data.httpTokenType || '')} onChange={(e) => setData({ httpTokenType: e.target.value })} placeholder="Bearer" />
+          </LabelArea>
+        </div>
+        <div>
+          <LabelArea label="Access Token">
+            <input className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={String(data.httpAccessToken || '')} onChange={(e) => setData({ httpAccessToken: e.target.value })} placeholder="token" />
+          </LabelArea>
+        </div>
+        <div className="col-span-1">
+          <LabelArea label="Headers (JSON)">
+            <textarea className={`w-full text-xs p-2 border ${headersOk ? 'border-slate-200 dark:border-slate-700' : 'border-red-500'} rounded-md bg-white dark:bg-slate-800 h-20`} value={headers} onChange={(e) => setData({ httpHeaders: e.target.value })} placeholder='{"Authorization":"Bearer ..."}' />
+          </LabelArea>
+        </div>
+        <div className="col-span-1">
+          <LabelArea label="Params (JSON)">
+            <textarea className={`w-full text-xs p-2 border ${paramsOk ? 'border-slate-200 dark:border-slate-700' : 'border-red-500'} rounded-md bg-white dark:bg-slate-800 h-20`} value={params} onChange={(e) => setData({ httpParams: e.target.value })} placeholder='{"q":"search","limit":10}' />
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="Key-Value Pairs">
+            <div className="space-y-2">
+              {(Array.isArray(data.httpPairs) ? data.httpPairs : []).map((p: any, idx: number) => (
+                <div key={idx} className="grid grid-cols-5 gap-2 items-center">
+                  <input className={`col-span-2 text-xs p-2 border ${String(p?.key || '').trim().length > 0 ? 'border-slate-200 dark:border-slate-700' : 'border-red-500'} rounded-md bg-white dark:bg-slate-800`} value={String(p?.key || '')} onChange={(e) => {
+                    const arr = Array.isArray(data.httpPairs) ? [...data.httpPairs] : [];
+                    arr[idx] = { key: e.target.value, value: String(p?.value || '') };
+                    setData({ httpPairs: arr });
+                  }} placeholder="key" />
+                  <input className="col-span-2 text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={String(p?.value || '')} onChange={(e) => {
+                    const arr = Array.isArray(data.httpPairs) ? [...data.httpPairs] : [];
+                    arr[idx] = { key: String(p?.key || ''), value: e.target.value };
+                    setData({ httpPairs: arr });
+                  }} placeholder="value" />
+                  <button className="p-2 rounded-md border border-slate-200 dark:border-slate-700" onClick={() => {
+                    const arr = (Array.isArray(data.httpPairs) ? data.httpPairs : []).filter((_: any, i: number) => i !== idx);
+                    setData({ httpPairs: arr });
+                  }} title="Remover">
+                    <Minus size={14} />
+                  </button>
+                </div>
+              ))}
+              <button className="text-[10px] px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700" onClick={() => setData({ httpPairs: [ ...(Array.isArray(data.httpPairs) ? data.httpPairs : []), { key: '', value: '' } ] })} title="Adicionar">
+                <Plus size={12} />
+              </button>
+            </div>
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="Body">
+            <textarea className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 h-20" value={body} onChange={(e) => setData({ httpBody: e.target.value })} placeholder="JSON ou texto" />
+          </LabelArea>
+        </div>
+        <div>
+          <LabelArea label="Timeout (ms)">
+            <input type="number" className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={timeoutMs} onChange={(e) => setData({ httpTimeoutMs: Number(e.target.value) })} min={0} />
+          </LabelArea>
+        </div>
+        <div>
+          <LabelArea label="Log/Debug">
+            <label className="inline-flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-300">
+              <input type="checkbox" checked={logEnabled} onChange={(e) => setData({ httpLogEnabled: e.target.checked })} />
+              <span>Registrar requisição/resposta</span>
+            </label>
+          </LabelArea>
+        </div>
+      </div>
+      <div className="flex justify-end mt-1"><StatusBadge status={data.status} /></div>
+    </NodeContainer>
+  );
+});
+
+export const HttpResponseNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.HTTP_RESPONSE];
+  const view = String(data.httpResponseView || 'auto');
+  const status = typeof data.httpStatus === 'number' ? data.httpStatus : undefined;
+  const headers = data.httpRespHeaders || {};
+  const ok = !!data.httpOk;
+  const text = String(data.httpBodyText || '');
+  const json = data.httpBodyJson;
+  const xml = data.httpBodyXml;
+  const ct = String(headers['content-type'] || headers['Content-Type'] || '');
+
+  const renderBody = () => {
+    if (view === 'json' || (view === 'auto' && ct.includes('application/json'))) {
+      const content = json !== undefined ? JSON.stringify(json, null, 2) : text;
+      return <pre className="whitespace-pre-wrap break-words">{content}</pre>;
+    }
+    if (view === 'xml' || (view === 'auto' && ct.includes('xml'))) {
+      const content = xml ? new XMLSerializer().serializeToString(xml) : text;
+      return <pre className="whitespace-pre-wrap break-words">{content}</pre>;
+    }
+    return <pre className="whitespace-pre-wrap break-words">{text}</pre>;
+  };
+
+  const badge = ok ? 'completed' : (status === undefined ? data.status : (status >= 400 ? 'error' : 'completed'));
+
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={Eye} color={config.color} tooltip={config.tooltip}>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <LabelArea label="View">
+            <select className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={view} onChange={(e) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, httpResponseView: e.target.value } } : n))}>
+              <option value="auto">Auto</option>
+              <option value="json">JSON</option>
+              <option value="xml">XML</option>
+              <option value="text">Texto</option>
+            </select>
+          </LabelArea>
+        </div>
+        <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-end">{status !== undefined ? `Status: ${status}` : ''}</div>
+        <div className="col-span-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[10px] text-slate-700 dark:text-slate-300 max-h-32 overflow-y-auto leading-relaxed custom-scrollbar">
+            {renderBody()}
+          </div>
+        </div>
+        <div className="col-span-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[10px] text-slate-700 dark:text-slate-300 max-h-24 overflow-y-auto leading-relaxed custom-scrollbar">
+            <pre className="whitespace-pre-wrap break-words">{Object.keys(headers).length ? JSON.stringify(headers, null, 2) : ''}</pre>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-end mt-1"><StatusBadge status={badge as any} /></div>
+    </NodeContainer>
+  );
+});
+
 // 3. Generic LLM Node
 /**
  * Nó de agentes de texto/LLM.

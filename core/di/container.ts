@@ -1,9 +1,10 @@
-import { Cache, ImageGenerator, Logger, RedisClient, SupabaseClient, TextGenerator } from '../interfaces';
+import { Cache, ImageGenerator, Logger, RedisClient, SupabaseClient, TextGenerator, HttpClient } from '../interfaces';
 import { createTextGenerator } from '@/services/textGenerator';
 import { createImageGenerator } from '@/services/imageGenerator';
 import { createSupabaseClient } from '@/services/supabaseService';
 import { createRedisClient } from '@/services/redisService';
 import { logger } from '@/utils/logger';
+import { createHttpClient } from '@/services/httpService';
 
 export interface Container {
   text: TextGenerator;
@@ -12,6 +13,7 @@ export interface Container {
   redis: RedisClient;
   cache: Cache;
   logger: Logger;
+  http: HttpClient;
 }
 
 class MapCache implements Cache {
@@ -29,5 +31,6 @@ export const createContainer = (): Container => {
     redis: createRedisClient(),
     cache,
     logger,
+    http: createHttpClient(logger),
   };
 };

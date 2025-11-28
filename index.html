@@ -3,7 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FlowGen AI</title>
+    <title>FlowGen AI — Construtor de Fluxos de IA</title>
+    <meta name="description" content="FlowGen AI: construa e execute fluxos de IA com roteamento, condicionais e integrações (Gmail, WhatsApp, Redis, Supabase, etc.)." />
+    <meta name="keywords" content="IA, fluxo, workflow, ReactFlow, roteamento, condicionais, integrações, Gmail, WhatsApp, Redis, Supabase" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="http://localhost:3001/" />
+    <meta name="theme-color" content="#6366F1" />
+    <meta property="og:title" content="FlowGen AI — Construtor de Fluxos de IA" />
+    <meta property="og:description" content="Crie e execute fluxos de IA com roteamento inteligente e integrações." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://localhost:3001/" />
+    <meta property="og:image" content="/assets/logos/gemini.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FlowGen AI — Construtor de Fluxos de IA" />
+    <meta name="twitter:description" content="Crie e execute fluxos de IA com roteamento inteligente e integrações." />
+    <meta name="twitter:image" content="/assets/logos/gemini.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -57,9 +71,39 @@
       html.dark .react-flow__controls .react-flow__controls-button:hover { background-color: #334155; }
       html.dark .react-flow__controls svg { fill: #e5e7eb; }
     </style>
-</head>
+  </head>
   <body>
+    <h1 style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">FlowGen AI — Construtor de Fluxos de IA</h1>
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "FlowGen AI",
+        "url": "http://localhost:3001/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "description": "Construtor de fluxos de IA com roteamento, condicionais e integrações.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "FlowGen AI"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "http://localhost:3001/"
+          }
+        ]
+      }
+    </script>
   </body>
 </html>

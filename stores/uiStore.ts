@@ -10,12 +10,15 @@ export interface UIState {
   showControls: boolean;
   zoomOnScroll: boolean;
   panOnDrag: boolean;
+  animateAllEdges: boolean;
   setShowControls: (v: boolean) => void;
   setZoomOnScroll: (v: boolean) => void;
   setPanOnDrag: (v: boolean) => void;
+  setAnimateAllEdges: (v: boolean) => void;
   toggleShowControls: () => void;
   toggleZoomOnScroll: () => void;
   togglePanOnDrag: () => void;
+  toggleAnimateAllEdges: () => void;
   inputsOpen: boolean;
   textOpen: boolean;
   imageOpen: boolean;
@@ -45,12 +48,15 @@ export const useUIStore = create<UIState>()(
       showControls: true,
       zoomOnScroll: true,
       panOnDrag: false,
+      animateAllEdges: false,
       setShowControls: (v) => set({ showControls: v }),
       setZoomOnScroll: (v) => set({ zoomOnScroll: v }),
       setPanOnDrag: (v) => set({ panOnDrag: v }),
+      setAnimateAllEdges: (v) => set({ animateAllEdges: v }),
       toggleShowControls: () => set((s) => ({ showControls: !s.showControls })),
       toggleZoomOnScroll: () => set((s) => ({ zoomOnScroll: !s.zoomOnScroll })),
       togglePanOnDrag: () => set((s) => ({ panOnDrag: !s.panOnDrag })),
+      toggleAnimateAllEdges: () => set((s) => ({ animateAllEdges: !s.animateAllEdges })),
       inputsOpen: true,
       textOpen: true,
       imageOpen: true,
@@ -76,6 +82,7 @@ export const useUIStore = create<UIState>()(
         showControls: state.showControls,
         zoomOnScroll: state.zoomOnScroll,
         panOnDrag: state.panOnDrag,
+        animateAllEdges: state.animateAllEdges,
         inputsOpen: state.inputsOpen,
         textOpen: state.textOpen,
         imageOpen: state.imageOpen,

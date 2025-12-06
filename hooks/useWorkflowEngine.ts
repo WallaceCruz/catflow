@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useReactFlow } from 'reactflow';
 import { NodeType } from '../types';
 import { NODE_CONFIGS } from '../config';
+import { parseXml, validateXml } from '../services/xmlService';
 import { createContainer } from '../core/di/container';
 import { useWorkflowStore } from '../stores/workflowStore';
 
@@ -10,7 +11,7 @@ import { useWorkflowStore } from '../stores/workflowStore';
  * Executor de workflows com injeção de dependências e baixa acoplamento.
  */
 export function useWorkflowEngine() {
-  const { getNodes, getEdges, setNodes } = useReactFlow();
+  const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
   const { isRunning, authError, setAuthError, startRun, finishRun, stopRun, requestStop } = useWorkflowStore((s) => ({
     isRunning: s.isRunning,
     authError: s.authError,
@@ -27,16 +28,20 @@ export function useWorkflowEngine() {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === id) {
-          // Lógica de reset de erro caso venha novo valor
-          const status = (partialData.value && partialData.value.trim().length > 0 && node.data.status === 'error') 
-            ? 'idle' 
-            : (partialData.status || node.data.status);
-          return { ...node, data: { ...node.data, ...partialData, status } };
+          const prev = node.data.status;
+          const status = (partialData.value && typeof partialData.value === 'string' && partialData.value.trim().length > 0 && prev === 'error')
+            ? 'idle'
+            : (partialData.status || prev || 'pending');
+          const next = { ...node, data: { ...node.data, ...partialData, status } };
+          if (prev !== status) {
+            deps.logger.info(`Node ${id} status changed`, { from: prev, to: status, nodeType: node.type });
+          }
+          return next;
         }
         return node;
       })
     );
-  }, [setNodes]);
+  }, [setNodes, deps.logger]);
 
   // Supabase moved to service; Redis moved to service; Text/Image moved to services
 
@@ -117,17 +122,18 @@ export function useWorkflowEngine() {
     }
     
       for (const edge of outgoingEdges) {
-      const targetNode = nodeMap ? nodeMap.get(edge.target) : nodes.find(n => n.id === edge.target);
-      if (!targetNode) continue;
-      if (seen.has(targetNode.id)) continue;
-      seen.add(targetNode.id);
+        const targetNode = nodeMap ? nodeMap.get(edge.target) : nodes.find(n => n.id === edge.target);
+        if (!targetNode) continue;
+        if (seen.has(targetNode.id)) continue;
+        seen.add(targetNode.id);
 
-      let result = payload;
+        let result = payload;
 
-      try {
-        if (useWorkflowStore.getState().stopRequested) {
-          throw new Error('STOP_REQUESTED');
-        }
+        try {
+          setEdges((eds) => eds.map((e) => e.id === edge.id ? { ...e, data: { ...(e.data || {}), edgeState: 'active' }, animated: true } : e));
+          if (useWorkflowStore.getState().stopRequested) {
+            throw new Error('STOP_REQUESTED');
+          }
         // --- TEXT NODES ---
         if (targetNode.type === NodeType.GEMINI_AGENT) {
           updateNodeStatus(targetNode.id, { status: 'running' });
@@ -192,6 +198,34 @@ export function useWorkflowEngine() {
           result = await deps.image.generate(payload, modelId, { aspectRatio, resolution });
           updateNodeStatus(targetNode.id, { status: 'completed', value: result, imageUrl: result });
         } 
+        else if (targetNode.type === NodeType.XML_PARSER) {
+          const xmlStr = typeof payload === 'string' ? payload : String(payload ?? '');
+          if (!xmlStr.trim()) { updateNodeStatus(targetNode.id, { status: 'error' }); continue; }
+          let namespaces: Record<string, string> = {};
+          try { if (targetNode.data.xmlNsJson) namespaces = JSON.parse(String(targetNode.data.xmlNsJson || '{}')); } catch { namespaces = {}; }
+          const xpath = String(targetNode.data.xmlXPath || '');
+          updateNodeStatus(targetNode.id, { status: 'running' });
+          const parsed = parseXml(xmlStr, { namespaces, xpath });
+          const outVal = typeof parsed.xpathResult !== 'undefined' ? parsed.xpathResult : parsed.object;
+          const finalVal = typeof outVal === 'string' ? outVal : JSON.stringify(outVal);
+          updateNodeStatus(targetNode.id, { status: parsed.errors.length ? 'error' : 'completed', xmlBody: xmlStr, xmlObject: parsed.object, xmlXPathResult: parsed.xpathResult, xmlErrors: parsed.errors, value: finalVal });
+          result = finalVal;
+        }
+        else if (targetNode.type === NodeType.XML_VALIDATOR) {
+          const xmlStr = typeof payload === 'string' ? payload : String(payload ?? '');
+          if (!xmlStr.trim()) { updateNodeStatus(targetNode.id, { status: 'error' }); continue; }
+          const schemaType = String(targetNode.data.xmlSchemaType || 'none') as 'xsd'|'dtd'|'none';
+          const schema = String(targetNode.data.xmlSchema || '');
+          let paths: Array<{ path: string; type?: 'string'|'int'|'decimal'|'boolean' }> = [];
+          try { if (targetNode.data.xmlValidationPaths) paths = JSON.parse(String(targetNode.data.xmlValidationPaths || '[]')); } catch { paths = []; }
+          let namespaces: Record<string, string> = {};
+          try { if (targetNode.data.xmlNsJson) namespaces = JSON.parse(String(targetNode.data.xmlNsJson || '{}')); } catch { namespaces = {}; }
+          updateNodeStatus(targetNode.id, { status: 'running' });
+          const res = validateXml(xmlStr, { schemaType, schema, paths, namespaces });
+          const finalVal = res.valid ? 'valid' : 'invalid';
+          updateNodeStatus(targetNode.id, { status: res.valid ? 'completed' : 'error', xmlValidationReport: res.report, xmlValidationErrors: res.errors, value: finalVal });
+          result = finalVal;
+        }
         else if (targetNode.type === NodeType.REDIS) {
           const host = targetNode.data.redisHost || '';
           const token = targetNode.data.redisPassword || '';
@@ -243,40 +277,31 @@ export function useWorkflowEngine() {
           const url = String(targetNode.data.httpUrl || '').trim();
           const timeoutMs = Number(targetNode.data.httpTimeoutMs ?? 10000);
           const logEnabled = !!targetNode.data.httpLogEnabled;
-          const tokenType = String(targetNode.data.httpTokenType || '').trim();
-          const accessToken = String(targetNode.data.httpAccessToken || '').trim();
           let headersObj: Record<string, string> = {};
           let paramsObj: Record<string, any> = {};
-          const pairsArr: Array<{ key: string; value: string }> = Array.isArray(targetNode.data.httpPairs) ? targetNode.data.httpPairs : [];
           let bodyStr: string | undefined = undefined;
           try { if (targetNode.data.httpHeaders) headersObj = JSON.parse(String(targetNode.data.httpHeaders || '{}')); } catch { headersObj = {}; }
           try { if (targetNode.data.httpParams) paramsObj = JSON.parse(String(targetNode.data.httpParams || '{}')); } catch { paramsObj = {}; }
           if (targetNode.data.httpBody) bodyStr = String(targetNode.data.httpBody || '');
-          if (!url || !/^https:\/\//i.test(url)) {
-            updateNodeStatus(targetNode.id, { status: 'error' });
+
+          const built = deps.httpBuilder.build({
+            method,
+            url,
+            headers: headersObj,
+            params: paramsObj,
+            body: bodyStr,
+            timeoutMs,
+            tokenType: String(targetNode.data.httpTokenType || ''),
+            accessToken: String(targetNode.data.httpAccessToken || ''),
+            pairs: Array.isArray(targetNode.data.httpPairs) ? targetNode.data.httpPairs : [],
+          });
+          if (!built.valid) {
+            updateNodeStatus(targetNode.id, { status: 'error', httpAuthError: built.reason });
             continue;
           }
-          if (tokenType && accessToken) {
-            headersObj['Authorization'] = `${tokenType} ${accessToken}`;
-          }
-          if (pairsArr.length > 0) {
-            const validPairs = pairsArr.filter(p => String(p.key || '').trim().length > 0);
-            if (validPairs.length !== pairsArr.length) {
-              updateNodeStatus(targetNode.id, { status: 'error' });
-              continue;
-            }
-            const fromPairs: Record<string, string> = {};
-            for (const p of validPairs) fromPairs[p.key] = String(p.value ?? '');
-            paramsObj = { ...paramsObj, ...fromPairs };
-            if (method === 'POST' || method === 'PUT') {
-              if (!bodyStr || bodyStr.trim() === '') {
-                const encoded = new URLSearchParams();
-                Object.entries(fromPairs).forEach(([k, v]) => encoded.append(k, v));
-                bodyStr = encoded.toString();
-                if (!headersObj['Content-Type']) headersObj['Content-Type'] = 'application/x-www-form-urlencoded';
-              }
-            }
-          }
+          headersObj = built.options.headers;
+          paramsObj = built.options.params;
+          bodyStr = built.options.body;
           updateNodeStatus(targetNode.id, { status: 'running' });
           if (logEnabled) deps.logger.info('HTTP request', { method, url, headers: headersObj, params: paramsObj });
           const resp = await deps.http.request({ method, url, headers: headersObj, params: paramsObj, body: bodyStr, timeoutMs });
@@ -336,8 +361,14 @@ export function useWorkflowEngine() {
           updateNodeStatus(targetNode.id, { status: 'error' });
         }
         throw error;
+      } finally {
+        const isStopped = useWorkflowStore.getState().stopRequested;
+        const tn = getNodes().find((n) => n.id === (targetNode?.id || ''));
+        const status = tn?.data?.status;
+        const finalState = isStopped ? 'paused' : (status === 'completed' ? 'success' : (status === 'error' ? 'error' : 'idle'));
+        setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, data: { ...(e.data || {}), edgeState: finalState }, animated: false } : e)));
       }
-    }
+      }
   };
 
   /**
@@ -345,6 +376,7 @@ export function useWorkflowEngine() {
    */
   const runWorkflow = async () => {
     startRun();
+    setEdges((eds) => eds.map((e) => ({ ...e, data: { ...(e.data || {}), edgeState: 'idle' }, animated: false })));
     
     // Limpa erros anteriores
     setNodes((nds) => nds.map(n => ({ 
@@ -604,6 +636,7 @@ export function useWorkflowEngine() {
 
   const stopWorkflow = () => {
     stopRun();
+    setEdges((eds) => eds.map((e) => ({ ...e, data: { ...(e.data || {}), edgeState: 'paused' }, animated: false })));
     requestStop();
   };
 

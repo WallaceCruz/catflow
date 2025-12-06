@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
-import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy, Play } from 'lucide-react';
+import { Type, Eye, Image as ImageIcon, Settings2, Server, Cpu, Key, Lock, Upload, Video, Plus, Minus, FileText, FileCode, Copy, Play, Code2 } from 'lucide-react';
 
 import { NodeContainer } from './nodes/NodeContainer';
 // serviços pesados são carregados sob demanda para reduzir o bundle inicial
@@ -322,6 +322,96 @@ export const XmlUploadNode = memo(({ id, type, data, selected }: NodeProps) => {
       </div>
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Out: String (XML)</span>
+         <StatusBadge status={data.status} />
+      </div>
+    </NodeContainer>
+  );
+});
+
+// 2e. XML Parser Node
+export const XmlParserNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.XML_PARSER];
+  const nsJson = String(data.xmlNsJson || '');
+  const xpath = String(data.xmlXPath || '');
+  const update = useCallback((patch: any) => {
+    setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, ...patch } } : n));
+  }, [id, setNodes]);
+  const preview = (() => {
+    const val = data.xmlXPathResult ?? data.xmlObject;
+    if (val === undefined) return '';
+    try { return typeof val === 'string' ? val : JSON.stringify(val, null, 2); } catch { return String(val); }
+  })();
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={FileCode} color={config.color} tooltip={config.tooltip}>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2">
+          <LabelArea label="Namespaces (JSON)">
+            <textarea className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 h-16" value={nsJson} onChange={(e) => update({ xmlNsJson: e.target.value })} placeholder='{"ns":"http://example.com"}' />
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="XPath">
+            <input className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={xpath} onChange={(e) => update({ xmlXPath: e.target.value })} placeholder="/root/item[1]/name" />
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md text-[10px] text-slate-700 dark:text-slate-300 max-h-32 overflow-y-auto leading-relaxed custom-scrollbar">
+            <pre className="whitespace-pre-wrap break-words">{preview}</pre>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+         <span className="text-[10px] text-slate-400 font-medium">Output: String/JSON</span>
+         <StatusBadge status={data.status} />
+      </div>
+    </NodeContainer>
+  );
+});
+
+// 2f. XML Validator Node
+export const XmlValidatorNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+  const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.XML_VALIDATOR];
+  const schemaType = String(data.xmlSchemaType || 'none');
+  const schema = String(data.xmlSchema || '');
+  const paths = String(data.xmlValidationPaths || '');
+  const nsJson = String(data.xmlNsJson || '');
+  const update = useCallback((patch: any) => {
+    setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, ...patch } } : n));
+  }, [id, setNodes]);
+  const errorsCount = Array.isArray(data.xmlValidationErrors) ? data.xmlValidationErrors.length : 0;
+  return (
+    <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={Code2} color={config.color} tooltip={config.tooltip}>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <LabelArea label="Schema Type">
+            <select className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800" value={schemaType} onChange={(e) => update({ xmlSchemaType: e.target.value })}>
+              <option value="none">None</option>
+              <option value="xsd">XSD</option>
+              <option value="dtd">DTD</option>
+            </select>
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="Schema">
+            <textarea className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 h-20" value={schema} onChange={(e) => update({ xmlSchema: e.target.value })} placeholder="&lt;xsd:schema targetNamespace='http://example.com'&gt;..." />
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="Validation Paths (JSON)">
+            <textarea className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 h-16" value={paths} onChange={(e) => update({ xmlValidationPaths: e.target.value })} placeholder='[{"path":"/root/val","type":"int"}]' />
+          </LabelArea>
+        </div>
+        <div className="col-span-2">
+          <LabelArea label="Namespaces (JSON)">
+            <textarea className="w-full text-xs p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 h-16" value={nsJson} onChange={(e) => update({ xmlNsJson: e.target.value })} placeholder='{"ns":"http://example.com"}' />
+          </LabelArea>
+        </div>
+        <div className="col-span-2 text-[10px] text-slate-500 dark:text-slate-400">{errorsCount ? `Erros: ${errorsCount}` : ''}</div>
+      </div>
+      <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+         <span className="text-[10px] text-slate-400 font-medium">Output: &quot;valid&quot;/&quot;invalid&quot;</span>
          <StatusBadge status={data.status} />
       </div>
     </NodeContainer>
@@ -709,13 +799,24 @@ export const TextGenNode = memo(({ id, type, data, selected }: NodeProps) => {
  * Configura aspecto e resolução e chama gerador.
  */
 export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
-  const { setNodes } = useReactFlow();
+  const { setNodes, getNodes, getEdges } = useReactFlow();
   const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS] || NODE_CONFIGS[NodeType.NANO_BANANA];
   const isPro = type === NodeType.NANO_BANANA_PRO;
 
   const updateConfig = useCallback((field: 'aspectRatio' | 'resolution', value: string) => {
     setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, [field]: value } } : n));
   }, [id, setNodes]);
+
+  const hasOutputImage = (() => {
+    try {
+      const edges = getEdges();
+      const nodes = getNodes();
+      const outs = edges.filter((e) => e.source === id).map((e) => nodes.find((n) => n.id === e.target)).filter(Boolean) as any[];
+      return outs.some((n) => n.type === NodeType.IMAGE_DISPLAY && n.data && n.data.imageUrl);
+    } catch { return false; }
+  })();
+
+  const badgeStatus = data.imageUrl ? 'completed' : (hasOutputImage ? 'completed' : data.status);
 
   return (
     <NodeContainer nodeId={id} nodeType={type} selected={selected} title={config.title} icon={config.icon} color={config.color} tooltip={config.tooltip} iconSrc={config.iconSrc} brandHex={config.brandHex}>
@@ -769,7 +870,7 @@ export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
       </div>
       <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
          <span className="text-[10px] text-slate-400 font-medium">Output: Image</span>
-         <StatusBadge status={data.imageUrl ? 'completed' : data.status} />
+         <StatusBadge status={badgeStatus} />
       </div>
     </NodeContainer>
   );
@@ -780,12 +881,45 @@ export const ImageGenNode = memo(({ id, type, data, selected }: NodeProps) => {
  * Nó de visualização de imagem.
  */
 export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
+  const { setNodes } = useReactFlow();
+
+  const ratioFromKey = (key?: string) => {
+    switch (key) {
+      case '1:1': return '1 / 1';
+      case '16:9': return '16 / 9';
+      case '9:16': return '9 / 16';
+      case '4:3': return '4 / 3';
+      case '3:4': return '3 / 4';
+      case '3:2': return '3 / 2';
+      case '2:3': return '2 / 3';
+      case '5:4': return '5 / 4';
+      case '4:5': return '4 / 5';
+      case '21:9': return '21 / 9';
+      default: return undefined;
+    }
+  };
+
+  useEffect(() => {
+    if (!data.imageUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth || 0;
+      const h = img.naturalHeight || 0;
+      setNodes((nodes) => nodes.map((n) => n.id === id ? { ...n, data: { ...n.data, imageWidth: w, imageHeight: h } } : n));
+    };
+    img.src = data.imageUrl;
+  }, [id, data.imageUrl, setNodes]);
+
+  const containerStyle = data.imageWidth && data.imageHeight
+    ? { aspectRatio: `${data.imageWidth}/${data.imageHeight}` }
+    : (data.aspectRatio ? { aspectRatio: ratioFromKey(data.aspectRatio) } : undefined);
+
   return (
     <NodeContainer nodeId={id} nodeType={type} selected={selected} title="Canvas View" icon={Eye} color="green" tooltip="Visualizador final.">
-      <div className="bg-slate-100 dark:bg-slate-900 rounded-md overflow-hidden min-h-[180px] flex items-center justify-center border border-slate-200 dark:border-slate-700 relative group">
+      <div className="bg-slate-100 dark:bg-slate-900 rounded-md overflow-hidden min-h-[180px] flex items-center justify-center border border-slate-200 dark:border-slate-700 relative group" style={containerStyle}>
         {data.imageUrl ? (
           <>
-            <img src={data.imageUrl} alt="Result" className="w-full h-auto object-contain" />
+            <img src={data.imageUrl} alt="Result" className="w-full h-full object-contain" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                <a href={data.imageUrl} download="generated.png" className="bg-white text-slate-800 px-3 py-1 rounded-full text-xs font-bold hover:bg-orange-500 hover:text-white transition-colors">Baixar PNG</a>
             </div>
@@ -794,7 +928,7 @@ export const OutputNode = memo(({ id, type, data, selected }: NodeProps) => {
           <div className="flex flex-col items-center gap-2 text-slate-400"><ImageIcon size={24} strokeWidth={1.5} /><span className="text-[10px]">Sem imagem</span></div>
         )}
       </div>
-       <div className="flex justify-end mt-2"><StatusBadge status={data.imageUrl ? 'completed' : 'idle'} /></div>
+      <div className="flex justify-end mt-2"><StatusBadge status={data.imageUrl ? 'completed' : 'pending'} /></div>
     </NodeContainer>
   );
 });

@@ -228,6 +228,18 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     color: "slate",
     tooltip: "Carregue um arquivo XML para usar como entrada."
   },
+  [NodeType.XML_PARSER]: {
+    title: "XML Parser",
+    icon: FileCode,
+    color: "blue",
+    tooltip: "Lê XML, converte em objeto e suporta XPath com namespaces."
+  },
+  [NodeType.XML_VALIDATOR]: {
+    title: "XML Validator",
+    icon: Code2,
+    color: "purple",
+    tooltip: "Valida XML: sintaxe, regras XPath e conformidade básica com XSD/DTD."
+  },
   [NodeType.PDF_UPLOAD]: {
     title: "PDF Upload",
     icon: FileText,

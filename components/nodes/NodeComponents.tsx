@@ -5,7 +5,9 @@ export const StatusBadge = ({ status }: { status?: string }) => {
   if (status === 'running') return <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/50 dark:text-orange-300 px-2 py-0.5 rounded-full"><Loader2 size={10} className="animate-spin"/> Processando</span>;
   if (status === 'completed') return <span className="text-[10px] uppercase font-bold text-green-600 bg-green-100 dark:bg-green-900/50 dark:text-green-300 px-2 py-0.5 rounded-full">Sucesso</span>;
   if (status === 'error') return <span className="text-[10px] uppercase font-bold text-red-600 bg-red-100 dark:bg-red-900/50 dark:text-red-300 px-2 py-0.5 rounded-full">Erro</span>;
-  return <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">Pronto</span>;
+  if (status === 'pending') return <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded-full">Pendente</span>;
+  if (status === 'paused') return <span className="text-[10px] uppercase font-bold text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">Pausado</span>;
+  return <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded-full">Pendente</span>;
 };
 
 export const LabelArea = ({ label, children }: { label: string, children?: React.ReactNode }) => (

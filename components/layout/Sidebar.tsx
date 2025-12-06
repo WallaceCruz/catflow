@@ -52,6 +52,7 @@ export const Sidebar = () => {
     setSearchTerm,
     inputsOpen,
     imageOpen,
+    textOpen,
     outputsOpen,
     communicationOpen,
     flowOpen,
@@ -59,6 +60,7 @@ export const Sidebar = () => {
     integrationsOpen,
     toggleInputs,
     toggleImage,
+    toggleText,
     toggleOutputs,
     toggleCommunication,
     toggleFlow,
@@ -81,6 +83,7 @@ export const Sidebar = () => {
   const inputsCount = ['User Prompt', 'Upload Image', 'Upload Video', 'Upload XML', 'Upload PDF'].filter(matches).length;
   const imageCount = ['Nano Banana', 'Nano Banana Pro'].filter(matches).length;
   const outputsCount = ['Image Viewer', 'Video Viewer', 'Message Output', 'HTTP Response'].filter(matches).length;
+  const processingCount = ['XML Parser', 'XML Validator'].filter(matches).length;
   const agentsCount = ['Gemini', 'Claude AI', 'Deepseek', 'OpenAI', 'Mistral AI', 'Hugging Face', 'Kimi', 'Grok'].filter(matches).length;
   const integrationsCount = ['Supabase', 'Redis', 'Microsoft Excel', 'Microsoft Word', 'Upstash', 'PostgreSQL', 'TypeORM', 'Neon', 'SQL Server'].filter(matches).length;
   const communicationCount = ['WhatsApp', 'Discord', 'Gmail', 'Telegram', 'Microsoft Teams', 'Outlook', 'Webhook', 'YouTube', 'HTTP Request'].filter(matches).length;
@@ -222,6 +225,24 @@ export const Sidebar = () => {
             )}
             {(!searchTerm || matches('Nano Banana Pro')) && (
               <SidebarItem type={NodeType.NANO_BANANA_PRO} iconSrc={NODE_CONFIGS[NodeType.NANO_BANANA_PRO].iconSrc} label="Nano Banana Pro" />
+            )}
+          </Collapsible>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center justify-between px-1 mb-2 cursor-pointer" onClick={() => toggleText()}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ChevronDown size={14} className={`${textOpen ? '' : 'rotate-180'} transition-transform`} />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider">Data Processing</h3>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{processingCount}</span>
+          </div>
+          <Collapsible open={textOpen}>
+            {(!searchTerm || matches('XML Parser')) && (
+              <SidebarItem type={NodeType.XML_PARSER} icon={FileCode} label="XML Parser" />
+            )}
+            {(!searchTerm || matches('XML Validator')) && (
+              <SidebarItem type={NodeType.XML_VALIDATOR} icon={Code2} label="XML Validator" />
             )}
           </Collapsible>
         </div>

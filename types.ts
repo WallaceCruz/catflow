@@ -6,6 +6,8 @@ export enum NodeType {
   IMAGE_UPLOAD = 'imageUpload',
   VIDEO_UPLOAD = 'videoUpload',
   XML_UPLOAD = 'xmlUpload',
+  XML_PARSER = 'xmlParser',
+  XML_VALIDATOR = 'xmlValidator',
   PDF_UPLOAD = 'pdfUpload',
   MESSAGE_OUTPUT = 'messageOutput',
   // Text/LLM Models
@@ -70,7 +72,17 @@ export interface NodeData {
   pdfName?: string;
   xmlContent?: string;
   xmlName?: string;
-  status?: 'idle' | 'running' | 'completed' | 'error';
+  xmlNsJson?: string;
+  xmlXPath?: string;
+  xmlSchemaType?: 'xsd' | 'dtd' | 'none';
+  xmlSchema?: string;
+  xmlValidationPaths?: string;
+  xmlBody?: string;
+  xmlObject?: any;
+  xmlXPathResult?: any;
+  xmlValidationReport?: any;
+  xmlValidationErrors?: string[];
+  status?: 'idle' | 'pending' | 'running' | 'completed' | 'error' | 'paused';
   onChange?: (value: string) => void;
 
   output?: string; 

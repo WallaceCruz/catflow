@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react';
-import { Undo, Redo, Key, Trash2, Save, Play, Moon, Sun, User, Settings, LogOut, Share2, Rocket } from 'lucide-react';
+import { Undo, Redo, Key, Trash2, Save, Play, Moon, Sun, User, Settings, LogOut, Share2, Rocket, Zap } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useUI } from '../../hooks/useUI';
 
@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   onUndo, onRedo, canUndo, canRedo, onSelectKey, onClear, onSave, onShare, onRun, isRunning, onDeploy
 }) => {
   const [profileOpen, setProfileOpen] = useState(false);
-  const { showControls, zoomOnScroll, panOnDrag, toggleShowControls, toggleZoomOnScroll, togglePanOnDrag } = useUI();
+  const { showControls, zoomOnScroll, panOnDrag, animateAllEdges, toggleShowControls, toggleZoomOnScroll, togglePanOnDrag, toggleAnimateAllEdges } = useUI();
   useEffect(() => {
     const close = () => setProfileOpen(false);
     if (profileOpen) document.addEventListener('click', close);
@@ -75,6 +75,10 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button onClick={togglePanOnDrag} className={`px-3 py-2 rounded-full text-xs font-semibold transition-colors ${panOnDrag ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`} title="Pan no Drag">
           Pan
+        </button>
+        <button onClick={toggleAnimateAllEdges} className={`px-3 py-2 rounded-full text-xs font-semibold transition-colors flex items-center gap-1 ${animateAllEdges ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`} title={animateAllEdges ? 'Animar todas as arestas' : 'Animar apenas arestas ativas'}>
+          <Zap size={14} />
+          Anim
         </button>
       </div>
 

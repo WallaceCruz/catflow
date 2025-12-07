@@ -42,3 +42,30 @@ export interface Logger {
   error(message: string, meta?: any): void;
   debug(message: string, meta?: any): void;
 }
+
+export interface HttpClient {
+  request(opts: { method: 'GET' | 'POST' | 'PUT' | 'DELETE'; url: string; headers?: Record<string, string>; params?: Record<string, any>; body?: string; timeoutMs?: number }): Promise<{ ok: boolean; status: number; headers: Record<string, string>; text: string; json?: any; xml?: any }>;
+}
+
+/**
+ * Builder e validador de requisições HTTP a partir de dados do nó.
+ * Responsável por montar headers (incluindo Authorization), query params,
+ * corpo da requisição e aplicar validações de segurança.
+ */
+export interface HttpRequestBuilder {
+  build(input: {
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    url: string;
+    headers?: Record<string, string>;
+    params?: Record<string, any>;
+    body?: string;
+    timeoutMs?: number;
+    tokenType?: string;
+    accessToken?: string;
+    pairs?: Array<{ key: string; value: string }>;
+  }): {
+    valid: boolean;
+    reason?: string;
+    options: { method: 'GET' | 'POST' | 'PUT' | 'DELETE'; url: string; headers: Record<string, string>; params: Record<string, any>; body?: string; timeoutMs?: number };
+  };
+}

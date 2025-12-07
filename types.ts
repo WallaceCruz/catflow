@@ -6,6 +6,8 @@ export enum NodeType {
   IMAGE_UPLOAD = 'imageUpload',
   VIDEO_UPLOAD = 'videoUpload',
   XML_UPLOAD = 'xmlUpload',
+  XML_PARSER = 'xmlParser',
+  XML_VALIDATOR = 'xmlValidator',
   PDF_UPLOAD = 'pdfUpload',
   MESSAGE_OUTPUT = 'messageOutput',
   // Text/LLM Models
@@ -53,6 +55,8 @@ export enum NodeType {
   CONDITION = 'condition',
   WAIT = 'wait',
   MERGE = 'merge',
+  HTTP_REQUEST = 'httpRequest',
+  HTTP_RESPONSE = 'httpResponse',
 }
 
 export interface NodeData {
@@ -68,7 +72,17 @@ export interface NodeData {
   pdfName?: string;
   xmlContent?: string;
   xmlName?: string;
-  status?: 'idle' | 'running' | 'completed' | 'error';
+  xmlNsJson?: string;
+  xmlXPath?: string;
+  xmlSchemaType?: 'xsd' | 'dtd' | 'none';
+  xmlSchema?: string;
+  xmlValidationPaths?: string;
+  xmlBody?: string;
+  xmlObject?: any;
+  xmlXPathResult?: any;
+  xmlValidationReport?: any;
+  xmlValidationErrors?: string[];
+  status?: 'idle' | 'pending' | 'running' | 'completed' | 'error' | 'paused';
   onChange?: (value: string) => void;
 
   output?: string; 
@@ -143,6 +157,25 @@ export interface NodeData {
   whatsError?: string;
   whatsStatus?: string;
   onTestConnection?: () => Promise<void> | void;
+
+  httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  httpUrl?: string;
+  httpHeaders?: string;
+  httpParams?: string;
+  httpBody?: string;
+  httpTimeoutMs?: number;
+  httpLogEnabled?: boolean;
+  httpResponseView?: 'auto' | 'json' | 'xml' | 'text';
+  httpStatus?: number;
+  httpOk?: boolean;
+  httpRespHeaders?: Record<string, string>;
+  httpBodyText?: string;
+  httpBodyJson?: any;
+  httpBodyXml?: any;
+  httpTokenType?: string;
+  httpAccessToken?: string;
+  httpPairs?: Array<{ key: string; value: string }>;
+  httpAuthError?: string;
 }
 
 export interface PipelineStepResult {

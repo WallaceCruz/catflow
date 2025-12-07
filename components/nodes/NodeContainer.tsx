@@ -1,8 +1,9 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Trash2, Copy, Info, MoreVertical } from 'lucide-react';
+import { Trash2, Copy, Info, MoreVertical, Play, Pause } from 'lucide-react';
 import { NODE_THEME } from '../../config';
 import { useTheme } from '../../context/ThemeContext';
+import { useWorkflowEngine } from '../../hooks/useWorkflowEngine';
 
 interface NodeContainerProps {
   nodeId: string;
@@ -40,6 +41,7 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
   const [menuOpen, setMenuOpen] = useState(false);
   const { isDarkMode } = useTheme();
   const [imgError, setImgError] = useState(false);
+  const { runFromNode, stopWorkflow, isRunning } = useWorkflowEngine();
 
   const headerBg = NODE_THEME[color as keyof typeof NODE_THEME]?.header || NODE_THEME['slate'].header;
   const headerText = NODE_THEME[color as keyof typeof NODE_THEME]?.headerText || NODE_THEME['slate'].headerText;
@@ -103,13 +105,23 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
     setMenuOpen((v) => !v);
   };
 
+  const onPlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isRunning) runFromNode(nodeId);
+  };
+
+  const onStop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isRunning) stopWorkflow();
+  };
+
   return (
     <div ref={containerRef} className={`relative w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl border-2 ${borderClass} overflow-visible group/node ${ringClass} transition-colors duration-200`} style={brandHex ? { borderColor: brandHex } : undefined}>
       {/* Header */}
       <div className={`px-4 py-3 flex items-center justify-between ${brandHeaderHex || brandHex ? '' : headerBg} rounded-t-xl relative border-b border-white/30 dark:border-transparent`} style={headerInlineStyle}>
         <div className={`flex items-center gap-2 ${brandHex ? '' : headerText}`}> 
           {iconSrc && !imgError ? (
-            <img src={iconSrc} alt="icon" className="w-5 h-5" loading="lazy" onError={() => setImgError(true)} />
+            <img src={iconSrc} alt={title} className="w-5 h-5" loading="lazy" onError={() => setImgError(true)} />
           ) : (
             <Icon size={16} strokeWidth={2.5} />
           )}
@@ -117,6 +129,17 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
         </div>
 
         <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); if (isRunning) { onStop(e); } else { onPlay(e); } }}
+            className={`p-1.5 inline-flex items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 hover:bg-slate-100 dark:hover:bg-white/10`}
+            title={isRunning ? 'Parar execução' : 'Executar a partir deste nó'}
+            aria-label={isRunning ? 'Parar execução' : 'Executar a partir deste nó'}
+            aria-pressed={isRunning}
+          >
+            {isRunning 
+              ? <Pause size={16} className={`${isDarkMode ? 'text-amber-300' : 'text-amber-600'}`} /> 
+              : <Play size={16} className={`${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`} />}
+          </button>
           {tooltip && (
             <div className="group/info relative">
               <Info size={14} className={`${isDarkMode ? 'text-white/70 hover:text-white' : 'text-slate-600 hover:text-slate-800'} cursor-help`} />
@@ -127,8 +150,8 @@ export const NodeContainer: React.FC<NodeContainerProps> = memo(({
             </div>
           )}
           <div className="relative ml-2">
-            <button onClick={toggleMenu} className="p-1.5 rounded-md bg-white/60 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition-colors" title="Mais opções">
-              <MoreVertical size={14} />
+            <button onClick={toggleMenu} className="p-1.5 inline-flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50" title="Mais opções" aria-label="Mais opções">
+              <MoreVertical size={16} className={`${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`} />
             </button>
             {menuOpen && (
               <div className="absolute right-0 top-7 w-40 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-20">

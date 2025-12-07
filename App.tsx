@@ -13,11 +13,12 @@ import ReactFlow, {
   EdgeLabelRenderer,
   getBezierPath,
   EdgeProps,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import { NodeType } from './types';
-import { StartNode, PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, PdfUploadNode, WebhookNode } from './components/CustomNodes';
+import { StartNode, PromptInputNode, TextGenNode, ImageGenNode, OutputNode, ImageUploadNode, VideoUploadNode, MessageOutputNode, VideoOutputNode, RedisNode, SupabaseNode, CommunicationNode, RouterNode, FunctionNode, ConditionNode, WaitNode, MergeNode, XmlUploadNode, XmlParserNode, XmlValidatorNode, PdfUploadNode, WebhookNode, HttpRequestNode, HttpResponseNode } from './components/CustomNodes';
 
 // Custom Hooks
 import { useFlowHistory } from './hooks/useFlowHistory';
@@ -40,6 +41,8 @@ const nodeTypes = {
   [NodeType.IMAGE_UPLOAD]: ImageUploadNode,
   [NodeType.VIDEO_UPLOAD]: VideoUploadNode,
   [NodeType.XML_UPLOAD]: XmlUploadNode,
+  [NodeType.XML_PARSER]: XmlParserNode,
+  [NodeType.XML_VALIDATOR]: XmlValidatorNode,
   [NodeType.PDF_UPLOAD]: PdfUploadNode,
   [NodeType.GEMINI_AGENT]: TextGenNode,
   [NodeType.CLAUDE_AGENT]: TextGenNode,
@@ -77,10 +80,14 @@ const nodeTypes = {
   [NodeType.CONDITION]: ConditionNode,
   [NodeType.WAIT]: WaitNode,
   [NodeType.MERGE]: MergeNode,
+  [NodeType.HTTP_REQUEST]: HttpRequestNode,
+  [NodeType.HTTP_RESPONSE]: HttpResponseNode,
 };
 
 const RemovableEdge: React.FC<EdgeProps> = (props) => {
   const { setEdges } = useReactFlow();
+  const { isDarkMode } = useTheme();
+  const { animateAllEdges } = useUI();
   const [hovered, setHovered] = useState(false);
   const hideTimer = useRef<number | null>(null);
   const [edgePath, labelX, labelY] = getBezierPath({
@@ -91,6 +98,15 @@ const RemovableEdge: React.FC<EdgeProps> = (props) => {
     sourcePosition: props.sourcePosition,
     targetPosition: props.targetPosition,
   });
+  const state = (props.data as any)?.edgeState as ('idle'|'active'|'error'|'paused'|'success'|undefined) || 'idle';
+  const stroke = state === 'active'
+    ? (isDarkMode ? '#f59e0b' : '#f97316')
+    : state === 'error'
+      ? (isDarkMode ? '#ef4444' : '#dc2626')
+      : state === 'success'
+        ? (isDarkMode ? '#22c55e' : '#10b981')
+        : (isDarkMode ? '#64748b' : '#94a3b8');
+  const dash = state === 'paused' ? '6 3' : (animateAllEdges ? '8 4' : undefined);
   const remove = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEdges((eds) => eds.filter((edge) => edge.id !== props.id));
@@ -108,7 +124,7 @@ const RemovableEdge: React.FC<EdgeProps> = (props) => {
   };
   return (
     <>
-      <BaseEdge id={props.id} path={edgePath} markerEnd={props.markerEnd} style={props.style} />
+      <BaseEdge id={props.id} path={edgePath} markerEnd={{ ...(props.markerEnd || {}), color: stroke }} style={{ ...(props.style || {}), stroke, strokeWidth: hovered ? 4 : 3, strokeDasharray: dash, opacity: hovered ? 1 : 0.95 }} />
       <path
         d={edgePath}
         fill="none"
@@ -170,11 +186,15 @@ function FlowContent() {
   const { project, toObject } = useReactFlow();
   const { isDarkMode } = useTheme();
 
-  const edgeOptions = useMemo(() => ({
-    type: 'removable',
-    animated: true,
-    style: { stroke: isDarkMode ? '#60a5fa' : '#6366f1', strokeWidth: 3 },
-  }), [isDarkMode]);
+  const edgeOptions = useMemo(() => {
+    const stroke = isDarkMode ? '#64748b' : '#94a3b8';
+    return {
+      type: 'removable',
+      animated: false,
+      style: { stroke, strokeWidth: 3 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 14, height: 14 },
+    } as const;
+  }, [isDarkMode]);
 
   // Hooks
   const { 

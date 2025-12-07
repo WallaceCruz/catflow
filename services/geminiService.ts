@@ -134,15 +134,21 @@ export const generateImage = async (
     });
 
     // Extract image from response
-    const parts = response.candidates?.[0]?.content?.parts;
-    if (parts) {
-      for (const part of parts) {
-        if (part.inlineData && part.inlineData.data) {
-          return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
-        }
+    const parts = (response as any)?.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if (part?.inlineData?.data) {
+        const mt = part.inlineData.mimeType || 'image/png';
+        return `data:${mt};base64,${part.inlineData.data}`;
+      }
+      if (part?.fileData?.uri) {
+        return String(part.fileData.uri);
       }
     }
-    
+
+    if (model !== 'gemini-2.5-flash-image') {
+      return generateImage(prompt, 'gemini-2.5-flash-image', { aspectRatio });
+    }
+
     throw new Error("No image data found in response");
   } catch (error) {
     console.error(`Error generating image with ${model}:`, error);

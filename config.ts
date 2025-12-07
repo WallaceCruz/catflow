@@ -1,7 +1,7 @@
 
 
 import { NodeType } from './types';
-import { Brain, Sparkles, Star, Upload, Video, Type, Server, GitBranch, Code2, Filter, Timer, FileText, FileCode, Play } from 'lucide-react';
+import { Brain, Sparkles, Star, Upload, Video, Type, Server, GitBranch, Code2, Filter, Timer, FileText, FileCode, Play, Eye } from 'lucide-react';
 
 export const NODE_COLORS = {
   blue: 'bg-blue-500 border-blue-500',
@@ -227,6 +227,18 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     icon: FileCode,
     color: "slate",
     tooltip: "Carregue um arquivo XML para usar como entrada."
+  },
+  [NodeType.XML_PARSER]: {
+    title: "XML Parser",
+    icon: FileCode,
+    color: "blue",
+    tooltip: "Lê XML, converte em objeto e suporta XPath com namespaces."
+  },
+  [NodeType.XML_VALIDATOR]: {
+    title: "XML Validator",
+    icon: Code2,
+    color: "purple",
+    tooltip: "Valida XML: sintaxe, regras XPath e conformidade básica com XSD/DTD."
   },
   [NodeType.PDF_UPLOAD]: {
     title: "PDF Upload",
@@ -509,5 +521,18 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
     icon: Timer,
     color: "slate",
     tooltip: "Aguarda por um tempo antes de continuar.",
+  }
+  ,
+  [NodeType.HTTP_REQUEST]: {
+    title: "HTTP Request",
+    icon: Server,
+    color: "blue",
+    tooltip: "Configura e envia requisições HTTP com validação e timeout.",
+  },
+  [NodeType.HTTP_RESPONSE]: {
+    title: "HTTP Response",
+    icon: Eye,
+    color: "green",
+    tooltip: "Processa e exibe respostas HTTP incluindo status, headers e corpo.",
   }
 };

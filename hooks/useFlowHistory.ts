@@ -1,7 +1,6 @@
 
 import { useCallback, useEffect } from 'react';
 import { useReactFlow, Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges, addEdge, Connection } from 'reactflow';
-import { NODE_CONFIGS } from '../config';
 import { useFlowHistoryStore } from '../stores/flowHistoryStore';
 
  
@@ -67,10 +66,7 @@ export function useFlowHistory(
   const onConnect = useCallback(
     (params: Connection) => {
       takeSnapshot();
-      const src = params.source ? getNode(params.source) : null;
-      const brandHex = src && src.type ? (NODE_CONFIGS[src.type as string]?.brandHex || undefined) : undefined;
-      const stroke = brandHex || '#6366f1';
-      setEdges((eds) => addEdge({ ...params, animated: true, type: 'removable', style: { stroke, strokeWidth: 4 } }, eds));
+      setEdges((eds) => addEdge({ ...params, animated: false, type: 'removable', data: { edgeState: 'idle' }, style: { strokeWidth: 3 } }, eds));
     },
     [takeSnapshot, setEdges, getNode]
   );
